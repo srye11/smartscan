@@ -1,10 +1,19 @@
 import base64
 import json
+import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI()
+
+api_key = os.getenv("OPENAI_API_KEY")
+
+# Fall back to Streamlit secrets if running on Streamlit Cloud
+if not api_key:
+    import streamlit as st
+    api_key = st.secrets.get("OPENAI_API_KEY")
+
+client = OpenAI(api_key=api_key)
 
 SYSTEM_PROMPT = """You are an allergen detection assistant. You will be shown an ingredient 
 label (as an image) and a list of allergies the user has declared. Labels may be written in 
