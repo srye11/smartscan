@@ -1,0 +1,10 @@
+test_num,image,declared_allergies,safe,flagged_allergens,correct_yn
+1,test_images/label1.jpg,"milk, peanut, wheat",False,wheat (Severe); milk (Moderate); peanut (Moderate),
+2,test_images/label2.jpg,"peanut, soy",False,soy (Severe),
+3,test_images/label3.jpg,"milk, peanut, wheat",False,peanut (Severe); wheat (Severe); milk (Moderate),
+4,test_images/label4.jpg,"egg, soy",False,soy (Severe),
+5,test_images/label5.jpg,soy,False,soy (Moderate),
+6,test_images/label6.jpg,fish,True,none,
+7,test_images/label7.jpg,shellfish,True,none,
+8,test_images/label8.jpg,"tree nut, soy",False,soy (Severe),
+9,test_images/label9.jpg,sesame,True,none,
