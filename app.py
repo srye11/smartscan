@@ -263,9 +263,14 @@ def scan_screen():
     st.markdown("### Scan an ingredient label")
     st.caption(f"Checking against: {', '.join(st.session_state.allergy_profile) if st.session_state.allergy_profile else 'no allergies set'}")
 
-    input_method = st.radio("How do you want to scan?", ["📷 Use camera", "📁 Upload a photo"], horizontal=True)
+    input_method = st.radio(
+        "How do you want to scan?",
+        ["📷 Use camera (quick)", "📁 Upload a photo (sharper, recommended for small text)"],
+        horizontal=True
+    )
 
     if input_method == "📷 Use camera":
+        st.caption("💡 Tip: hold the label ~15-20cm away, ensure good lighting, and hold steady for a second before capturing for a sharper photo.")
         uploaded_file = st.camera_input("Take a photo of the label")
     else:
         uploaded_file = st.file_uploader("Upload a photo of the label", type=["jpg", "jpeg", "png"])
