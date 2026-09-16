@@ -6,7 +6,16 @@ from openai import RateLimitError
 
 GROUND_TRUTH_FILE = "ground_truth.csv"
 RESULTS_FILE = "evaluation_results.csv"
-FIELDNAMES = ["image", "declared", "actual", "flagged", "true_positives", "false_positives", "false_negatives"]
+FIELDNAMES = ["image", "declared", "actual", "flagged", "true_positives", "false_positives", "false_negatives", "severity_correct", "severity_checked"]
+
+def parse_severity_string(s):
+    pairs = {}
+    if s and s.strip():
+        for pair in s.split(";"):
+            if ":" in pair:
+                allergen, severity = pair.split(":")
+                pairs[allergen.strip().lower()] = severity.strip()
+    return pairs
 
 # Load ground truth
 ground_truth = {}
@@ -19,7 +28,8 @@ with open(GROUND_TRUTH_FILE, newline="", encoding="utf-8") as f:
         else:
             actual = [a.strip() for a in row["actual_allergens_present"].split(",") if a.strip()]
         declared = [a.strip() for a in row["declared_allergies"].split(",")]
-        ground_truth[row["image"]] = {"declared": declared, "actual": actual}
+        expected_severity = parse_severity_string(row.get("expected_severity", ""))
+        ground_truth[row["image"]] = {"declared": declared, "actual": actual, "expected_severity": expected_severity}
 
 # Load already-completed results (if resuming)
 completed_images = set()
@@ -30,14 +40,13 @@ if os.path.exists(RESULTS_FILE):
             completed_images.add(row["image"])
     print(f"Found {len(completed_images)} already-completed results. Resuming...")
 else:
-    # Create the file with headers if it doesn't exist yet
     with open(RESULTS_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writeheader()
 
 for image_name, data in ground_truth.items():
     if image_name in completed_images:
-        continue  # skip already-done images
+        continue
 
     image_path = f"test_images/{image_name}"
     declared = data["declared"]
@@ -62,18 +71,30 @@ for image_name, data in ground_truth.items():
         continue
 
     flagged = set(a["allergen"].lower() for a in result.get("flagged_allergens", []))
+    flagged_severity = {a["allergen"].lower(): a["severity"] for a in result.get("flagged_allergens", [])}
 
     tp = flagged & actual
     fp = flagged - actual
     fn = actual - flagged
+
+    # Severity scoring - only checked for true positives that have an expected severity
+    expected_sev = data["expected_severity"]
+    severity_correct = 0
+    severity_checked = 0
+    for allergen in tp:
+        if allergen in expected_sev:
+            severity_checked += 1
+            if flagged_severity.get(allergen) == expected_sev[allergen]:
+                severity_correct += 1
 
     print(f"\n{image_name}")
     print(f"  Declared: {declared}")
     print(f"  Actual:   {sorted(actual)}")
     print(f"  Flagged:  {sorted(flagged)}")
     print(f"  TP: {sorted(tp)} | FP: {sorted(fp)} | FN: {sorted(fn)}")
+    if severity_checked:
+        print(f"  Severity: {severity_correct}/{severity_checked} correct")
 
-    # Append this row to the results file immediately
     with open(RESULTS_FILE, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writerow({
@@ -84,33 +105,38 @@ for image_name, data in ground_truth.items():
             "true_positives": ", ".join(sorted(tp)),
             "false_positives": ", ".join(sorted(fp)),
             "false_negatives": ", ".join(sorted(fn)),
+            "severity_correct": severity_correct,
+            "severity_checked": severity_checked,
         })
 
-    time.sleep(10)  # pause between calls to avoid rate limits
+    time.sleep(10)
 
-# ---- Calculate final metrics by reading the full results file back ----
+# ---- Calculate final metrics ----
 total_tp = 0
 total_fp = 0
 total_fn = 0
+total_severity_correct = 0
+total_severity_checked = 0
 
 with open(RESULTS_FILE, newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f)
     for row in reader:
-        tp_count = len([a for a in row["true_positives"].split(",") if a.strip()])
-        fp_count = len([a for a in row["false_positives"].split(",") if a.strip()])
-        fn_count = len([a for a in row["false_negatives"].split(",") if a.strip()])
-        total_tp += tp_count
-        total_fp += fp_count
-        total_fn += fn_count
+        total_tp += len([a for a in row["true_positives"].split(",") if a.strip()])
+        total_fp += len([a for a in row["false_positives"].split(",") if a.strip()])
+        total_fn += len([a for a in row["false_negatives"].split(",") if a.strip()])
+        total_severity_correct += int(row["severity_correct"]) if row["severity_correct"] else 0
+        total_severity_checked += int(row["severity_checked"]) if row["severity_checked"] else 0
 
 precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
 recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
 f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+severity_accuracy = total_severity_correct / total_severity_checked if total_severity_checked > 0 else 0
 
 print(f"\n{'='*50}")
 print(f"TOTAL TP: {total_tp} | TOTAL FP: {total_fp} | TOTAL FN: {total_fn}")
 print(f"Precision: {precision:.2f}")
 print(f"Recall:    {recall:.2f}")
 print(f"F1 Score:  {f1:.2f}")
+print(f"Severity Accuracy: {severity_accuracy:.2f} ({total_severity_correct}/{total_severity_checked})")
 print(f"{'='*50}")
 print(f"\nResults saved to {RESULTS_FILE}")

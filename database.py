@@ -1,5 +1,7 @@
 import sqlite3
 import json
+import hashlib
+import os
 from datetime import datetime
 
 DB_PATH = "smartscan.db"
@@ -9,8 +11,17 @@ def init_db():
     cursor = conn.cursor()
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            email TEXT PRIMARY KEY,
+            full_name TEXT,
+            salt TEXT,
+            password_hash TEXT
+        )
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS profile (
-            id INTEGER PRIMARY KEY,
+            email TEXT PRIMARY KEY,
             allergies TEXT
         )
     """)
@@ -18,6 +29,7 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS scans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT,
             timestamp TEXT,
             image BLOB,
             result TEXT
@@ -27,49 +39,95 @@ def init_db():
     conn.commit()
     conn.close()
 
-def save_profile(allergies):
+# ---- Password hashing (PBKDF2, no extra packages needed) ----
+def hash_password(password, salt=None):
+    if salt is None:
+        salt = os.urandom(16).hex()
+    pw_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 100_000).hex()
+    return salt, pw_hash
+
+def create_user(email, full_name, password):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM profile")
+    cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+    if cursor.fetchone():
+        conn.close()
+        return False  # already exists
+
+    salt, pw_hash = hash_password(password)
     cursor.execute(
-        "INSERT INTO profile (id, allergies) VALUES (1, ?)",
-        (json.dumps(allergies),)
+        "INSERT INTO users (email, full_name, salt, password_hash) VALUES (?, ?, ?, ?)",
+        (email, full_name, salt, pw_hash)
+    )
+    conn.commit()
+    conn.close()
+    return True
+
+def verify_login(email, password):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT full_name, salt, password_hash FROM users WHERE email = ?", (email,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    full_name, salt, stored_hash = row
+    _, check_hash = hash_password(password, salt)
+    if check_hash == stored_hash:
+        return full_name
+    return None
+
+# ---- Profile ----
+def save_profile(email, allergies):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM profile WHERE email = ?", (email,))
+    cursor.execute(
+        "INSERT INTO profile (email, allergies) VALUES (?, ?)",
+        (email, json.dumps(allergies))
     )
     conn.commit()
     conn.close()
 
-def load_profile():
+def load_profile(email):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT allergies FROM profile WHERE id = 1")
+    cursor.execute("SELECT allergies FROM profile WHERE email = ?", (email,))
     row = cursor.fetchone()
     conn.close()
     if row:
         return json.loads(row[0])
     return []
 
-def save_scan(image_bytes, result_dict):
+# ---- Scans ----
+def save_scan(email, image_bytes, result_dict):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO scans (timestamp, image, result) VALUES (?, ?, ?)",
-        (datetime.now().isoformat(), image_bytes, json.dumps(result_dict))
+        "INSERT INTO scans (email, timestamp, image, result) VALUES (?, ?, ?, ?)",
+        (email, datetime.now().isoformat(), image_bytes, json.dumps(result_dict))
     )
     conn.commit()
     conn.close()
 
-def load_scans():
+def load_scans(email):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT timestamp, image, result FROM scans ORDER BY id DESC")
+    cursor.execute(
+        "SELECT id, timestamp, image, result FROM scans WHERE email = ? ORDER BY id DESC",
+        (email,)
+    )
     rows = cursor.fetchall()
     conn.close()
 
     scans = []
-    for timestamp, image, result_json in rows:
-        scans.append({
-            "timestamp": timestamp,
-            "image": image,
-            "result": json.loads(result_json)
-        })
+    for db_id, timestamp, image, result_json in rows:
+        scans.append({"db_id": db_id, "timestamp": timestamp, "image": image, "result": json.loads(result_json)})
     return scans
+
+def delete_scan(email, scan_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM scans WHERE id = ? AND email = ?", (scan_id, email))
+    conn.commit()
+    conn.close()

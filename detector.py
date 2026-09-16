@@ -1,19 +1,10 @@
 import base64
 import json
-import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-
-api_key = os.getenv("OPENAI_API_KEY")
-
-# Fall back to Streamlit secrets if running on Streamlit Cloud
-if not api_key:
-    import streamlit as st
-    api_key = st.secrets.get("OPENAI_API_KEY")
-
-client = OpenAI(api_key=api_key)
+client = OpenAI()
 
 SYSTEM_PROMPT = """You are an allergen detection assistant. You will be shown an ingredient 
 label (as an image) and a list of allergies the user has declared. Labels may be written in 
@@ -28,6 +19,9 @@ additives" or "synthetic origin" with no named source.
 - NEVER flag an allergen that does not appear anywhere on the label in any form. If the 
 declared allergy is not mentioned at all, do not include it, even if other allergens are 
 present nearby.
+- It is normal and expected for MOST declared allergens to result in NO flag. Do not feel 
+obligated to find a match for every allergen the user declared. Treat each declared allergen 
+independently — the presence of one real allergen on the label does not make others more likely.
 - Every flagged allergen MUST include a "quoted_text" field containing the exact, verbatim 
 phrase copied directly from the label image that proves this allergen is present. Do not 
 paraphrase or summarize for this field. If you cannot find and quote an exact phrase from the 
@@ -125,6 +119,7 @@ def detect_allergens(image_path, declared_allergies):
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
+        temperature=0,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {

@@ -1,30 +1,30 @@
-image,declared_allergies,actual_allergens_present
-label1.jpg,"milk,peanut,wheat","milk"
-label2.jpg,"peanut,soy","soy"
-label3.jpg,"milk,peanut,wheat","wheat"
-label4.jpg,"egg,soy","soy"
-label5.jpg,"soy","soy"
-label6.jpg,"fish","none"
-label7.jpg,"shellfish","none"
-label8.jpg,"tree nut,soy","soy"
-label9.jpg,"sesame","none"
-label10.jpg,"milk,egg,peanut","none"
-label11.png,"wheat,milk,soy","wheat,milk"
-label12.jpg,"fish,shellfish,sesame","none"
-label13.jpg,"wheat,soy,milk","wheat,soy"
-label14.png,"fish,shellfish","fish"
-label15.png,"egg,soy,sesame","none"
-label16.png,"soy,milk","soy"
-label17.png,"soy,wheat","soy"
-label18.jpg,"milk,peanut","milk"
-label19.jpg,"wheat,tree nut,soy,milk","wheat,tree nut,soy,milk"
-label20.jpg,"milk,soy,egg","milk,soy"
-label21.jpg,"sesame,peanut","none"
-label22.jpeg,"milk,soy","milk"
-label23.png,"fish,tree nut","none"
-label25.jpg,"egg,peanut","none"
-label26.jpg,"soy,egg,milk","soy,egg"
-label27.jpg,"fish,soy","fish"
-label28.jpg,"wheat,shellfish,fish","wheat,shellfish"
-label29.jpg,"shellfish,milk","none"
-label30.jpg,"milk,peanut,soy","milk"
+image,declared_allergies,actual_allergens_present,expected_severity
+label1.jpg,"milk,peanut,wheat","milk",milk:Moderate
+label2.jpg,"peanut,soy","soy",soy:Severe
+label3.jpg,"milk,peanut,wheat","wheat",wheat:Severe
+label4.jpg,"egg,soy","soy",soy:Severe
+label5.jpg,"soy","soy",soy:Moderate
+label6.jpg,"fish","none",
+label7.jpg,"shellfish","none",
+label8.jpg,"tree nut,soy","soy",soy:Severe
+label9.jpg,"sesame","none",
+label10.jpg,"milk,egg,peanut","none",
+label11.png,"wheat,milk,soy","milk,wheat","milk:Severe;wheat:Severe"
+label12.jpg,"fish,shellfish,sesame","none",
+label13.jpg,"wheat,soy,milk","soy,wheat","soy:Severe;wheat:Severe"
+label14.png,"fish,shellfish","fish",fish:Severe
+label15.png,"egg,soy,sesame","none",
+label16.png,"soy,milk","soy",soy:Severe
+label17.png,"soy,wheat","soy",soy:Severe
+label18.jpg,"milk,peanut","milk",milk:Severe
+label19.jpg,"wheat,tree nut,soy,milk","milk,soy,tree nut,wheat","milk:Moderate;soy:Moderate;tree nut:Severe;wheat:Severe"
+label20.jpg,"milk,soy,egg","milk,soy","milk:Severe;soy:Severe"
+label21.jpg,"sesame,peanut","none",
+label22.jpeg,"milk,soy","milk",milk:Severe
+label23.png,"fish,tree nut","none",
+label25.jpg,"egg,peanut","none",
+label26.jpg,"soy,egg,milk","egg,soy","egg:Severe;soy:Severe"
+label27.jpg,"fish,soy","fish",fish:Severe
+label28.jpg,"wheat,shellfish,fish","shellfish,wheat","shellfish:Severe;wheat:Severe"
+label29.jpg,"shellfish,milk","none",
+label30.jpg,"milk,peanut,soy","milk",milk:Severe
