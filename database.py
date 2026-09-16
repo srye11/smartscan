@@ -39,7 +39,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ---- Password hashing (PBKDF2, no extra packages needed) ----
 def hash_password(password, salt=None):
     if salt is None:
         salt = os.urandom(16).hex()
@@ -52,7 +51,7 @@ def create_user(email, full_name, password):
     cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
     if cursor.fetchone():
         conn.close()
-        return False  # already exists
+        return False
 
     salt, pw_hash = hash_password(password)
     cursor.execute(
@@ -77,7 +76,6 @@ def verify_login(email, password):
         return full_name
     return None
 
-# ---- Profile ----
 def save_profile(email, allergies):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -99,7 +97,6 @@ def load_profile(email):
         return json.loads(row[0])
     return []
 
-# ---- Scans ----
 def save_scan(email, image_bytes, result_dict):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -131,3 +128,19 @@ def delete_scan(email, scan_id):
     cursor.execute("DELETE FROM scans WHERE id = ? AND email = ?", (scan_id, email))
     conn.commit()
     conn.close()
+
+def get_user_count():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
+
+def get_all_users():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT email, full_name FROM users")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
