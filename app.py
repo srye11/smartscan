@@ -265,11 +265,12 @@ def scan_screen():
 
     input_method = st.radio(
         "How do you want to scan?",
-        ["📷 Use camera (quick)", "📁 Upload a photo (sharper, recommended for small text)"],
+        ["camera", "upload"],
+        format_func=lambda x: "📷 Use camera (quick)" if x == "camera" else "📁 Upload a photo (sharper, recommended for small text)",
         horizontal=True
     )
 
-    if input_method == "📷 Use camera":
+    if input_method == "camera":
         st.caption("💡 Tip: hold the label ~15-20cm away, ensure good lighting, and hold steady for a second before capturing for a sharper photo.")
         uploaded_file = st.camera_input("Take a photo of the label")
     else:
