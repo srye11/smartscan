@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#064e3b">
+<title>SmartScan</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== AUTH ===== -->
+<div id="auth" class="hidden">
+  <div class="auth-side">
+    <img class="auth-logo" src="logo.svg" alt="SmartScan buddy">
+    <h1>SmartScan</h1>
+    <p class="tagline">Allergen-safe food, personalised for you.</p>
+    <div class="feature">📷 Scan any product label</div>
+    <div class="feature">⚠️ Detects hidden allergens</div>
+    <div class="feature">🕘 Remembers your scan history</div>
+  </div>
+  <div class="auth-main">
+    <div class="auth-box">
+      <h2 id="authTitle">Create your account</h2>
+      <p class="sub" id="authSub">Start scanning safely in under 2 minutes</p>
+      <div class="tabs">
+        <button id="tabSignup" class="on">Sign Up</button>
+        <button id="tabLogin">Log In</button>
+      </div>
+      <form id="authForm" autocomplete="on">
+        <div id="nameRow">
+          <label class="lbl" for="fullName">Full name</label>
+          <input class="input" id="fullName" placeholder="e.g. Amirah Shaheerah Rahman">
+        </div>
+        <label class="lbl" for="email">Email address</label>
+        <input class="input" id="email" type="email" placeholder="your@email.com" required autocomplete="email">
+        <label class="lbl" for="password">Password</label>
+        <input class="input" id="password" type="password" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password">
+        <div id="allergyRow">
+          <label class="lbl" style="margin-top:18px">Declare your allergies</label>
+          <p class="hint">Select all that apply. You can change this later.</p>
+          <div class="chips" id="signupChips"></div>
+        </div>
+        <div id="authMsg" class="msg hidden"></div>
+        <button class="btn" id="authBtn" type="submit" style="margin-top:18px">Get started, it's free</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" class="hidden">
+  <aside class="side">
+    <div class="brand"><img src="logo.svg" alt=""> SmartScan</div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="who">
+      <div class="avatar" id="avatar">?</div>
+      <div><div class="n" id="whoName"></div><div class="e" id="whoEmail"></div></div>
+      <button id="logoutSide">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="mtop"><span style="display:flex;align-items:center;gap:8px"><img src="logo.svg" alt=""> SmartScan</span><button id="logoutTop">Log out</button></div>
+
+    <!-- Scan -->
+    <section id="v-scan">
+      <h2>Scan ingredient label</h2>
+      <p class="sub">Take a photo of the ingredient list. The AI reads it and checks your allergies.</p>
+      <div class="grid2">
+        <div>
+          <div class="dropzone" id="dropzone">
+            <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
+            <div id="dzEmpty">
+              <div style="font-size:46px">📷</div>
+              <p style="margin:8px 0 14px">Fill the frame with the ingredient list.<br>Keep it flat and well lit.</p>
+            </div>
+            <img id="preview" class="hidden" alt="Preview">
+            <div class="scanline hidden" id="scanline"></div>
+            <div class="pick">
+              <label class="btn dark" style="cursor:pointer">📷 Take photo
+                <input id="camInput" type="file" accept="image/*" capture="environment" hidden>
+              </label>
+              <label class="btn light" style="cursor:pointer">📁 Upload
+                <input id="fileInput" type="file" accept="image/*" hidden>
+              </label>
+            </div>
+          </div>
+          <p class="note">Tip: "Take photo" opens your phone's own camera, which gives a sharper picture than a live video frame.</p>
+          <button class="btn dark" id="scanBtn" style="margin-top:12px" disabled>Check for allergens</button>
+          <div id="scanMsg" class="msg hidden"></div>
+        </div>
+        <div class="card" id="resultCard">
+          <h3 style="margin-bottom:6px">Progress</h3>
+          <ul class="steps" id="steps">
+            <li id="st1"><span class="dot">1</span> Label photo selected</li>
+            <li id="st2"><span class="dot">2</span> Detecting allergens</li>
+            <li id="st3"><span class="dot">3</span> Results ready</li>
+          </ul>
+          <div id="resultBody"><p style="color:var(--muted)">Your results will show here.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="v-history" class="hidden">
+      <h2>Scan history</h2>
+      <p class="sub">Your scans are saved to your account, so they are here next time too.</p>
+      <div id="histList"></div>
+    </section>
+
+    <!-- Recipes -->
+    <section id="v-recipes" class="hidden">
+      <h2>Safe recipes for you</h2>
+      <p class="sub" id="recSub">Recipes free of your declared allergens.</p>
+      <div class="filters" id="recFilters"></div>
+      <div class="rgrid" id="recGrid"></div>
+    </section>
+
+    <!-- Profile -->
+    <section id="v-profile" class="hidden">
+      <h2>Allergy profile</h2>
+      <p class="sub">The scanner only checks the allergens you pick here.</p>
+      <div class="card prof">
+        <label class="lbl" for="profName" style="margin-top:0">Full name</label>
+        <input class="input" id="profName">
+        <label class="lbl" style="margin-top:16px">My allergies</label>
+        <div class="chips" id="profChips"></div>
+        <button class="btn" id="saveProf" style="margin-top:18px">Save profile</button>
+        <div id="profMsg" class="msg hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom" id="bottomNav"></nav>
+</div>
+
+<div id="boot" style="min-height:100vh;display:grid;place-items:center;color:#6b7f88">Loading SmartScan…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="recipes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
