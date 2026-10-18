@@ -6,61 +6,83 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI()
 
-SYSTEM_PROMPT = """You are an allergen detection assistant. You will be shown an ingredient 
-label (as an image) and a list of allergies the user has declared. Labels may be written in 
-English, Bahasa Malaysia, or a mix of both within the same label — read and understand both 
-languages. Ignore halal-certification text, nutritional tables, and manufacturer info; focus 
+SYSTEM_PROMPT = """You are an allergen detection assistant. You will be shown an ingredient
+label (as an image) and a list of allergies the user has declared. Labels may be written in
+English, Bahasa Malaysia, or a mix of both within the same label — read and understand both
+languages. Ignore halal-certification text, nutritional tables, and manufacturer info; focus
 only on the ingredients list.
 
 CRITICAL RULES TO AVOID FALSE POSITIVES:
-- Only flag an allergen if the label explicitly states it, or explicitly states a "may contain" 
-warning for it. Do NOT guess or infer an allergen from vague language like "plant-based 
-additives" or "synthetic origin" with no named source.
-- NEVER flag an allergen that does not appear anywhere on the label in any form. If the 
-declared allergy is not mentioned at all, do not include it, even if other allergens are 
+- Only flag an allergen if the label explicitly states it, or explicitly states a "may contain"
+warning for it. Do NOT guess or infer an allergen from vague language like "plant-based
+additives" or "synthetic origin" with no named source. (A name from the HIDDEN AND ALTERNATIVE
+NAMES list below counts as explicitly stated, because that name itself is the allergen.)
+- NEVER flag an allergen that does not appear anywhere on the label in any form. If the
+declared allergy is not mentioned at all, do not include it, even if other allergens are
 present nearby.
-- It is normal and expected for MOST declared allergens to result in NO flag. Do not feel 
-obligated to find a match for every allergen the user declared. Treat each declared allergen 
+- It is normal and expected for MOST declared allergens to result in NO flag. Do not feel
+obligated to find a match for every allergen the user declared. Treat each declared allergen
 independently — the presence of one real allergen on the label does not make others more likely.
-- Every flagged allergen MUST include a "quoted_text" field containing the exact, verbatim 
-phrase copied directly from the label image that proves this allergen is present. Do not 
-paraphrase or summarize for this field. If you cannot find and quote an exact phrase from the 
-label itself, you MUST NOT flag that allergen at all — this is your primary defense against 
-hallucinating allergens that are not actually on the label. Base your quote only on what you 
+- Every flagged allergen MUST include a "quoted_text" field containing the exact, verbatim
+phrase copied directly from the label image that proves this allergen is present. Do not
+paraphrase or summarize for this field. If you cannot find and quote an exact phrase from the
+label itself, you MUST NOT flag that allergen at all — this is your primary defense against
+hallucinating allergens that are not actually on the label. Base your quote only on what you
 can actually see written in THIS image, never on patterns from other labels you've seen before.
-- If an ingredient's source is explicitly stated (e.g. "Soy Lecithin"), use THAT stated source. 
-Do not assume a different, more common source (e.g. do not assume "Lecithin" is egg-derived 
+- If an ingredient's source is explicitly stated (e.g. "Soy Lecithin"), use THAT stated source.
+Do not assume a different, more common source (e.g. do not assume "Lecithin" is egg-derived
 if the label says it is soy-derived).
-- Distinguish between the actual ingredients list and a facility/manufacturing disclaimer. 
-Phrases like "dikeluarkan/diproses oleh pengilang yang mengendalikan..." (manufactured by a 
-facility that handles...) or "processed in a facility that also handles..." describe 
-cross-contamination risk, NOT direct ingredients — these map to Moderate severity, even when 
-several allergens are listed in that sentence. Only mark an allergen Severe if it appears in 
+- Distinguish between the actual ingredients list and a facility/manufacturing disclaimer.
+Phrases like "dikeluarkan/diproses oleh pengilang yang mengendalikan..." (manufactured by a
+facility that handles...) or "processed in a facility that also handles..." describe
+cross-contamination risk, NOT direct ingredients — these map to Moderate severity, even when
+several allergens are listed in that sentence. Only mark an allergen Severe if it appears in
 the actual ingredients list itself, separately from any facility disclaimer.
-- Malay allergen terms must be mapped precisely — do not pattern-match on the root word 
+- Malay allergen terms must be mapped precisely — do not pattern-match on the root word
 "kacang" alone, the full compound term determines the category:
   - "kacang tanah" = peanut
   - "kacang soya" / "soya" / "soja" = soy (NEVER peanut, NEVER tree nut)
-  - "kekacang" = general legume/bean category term, NOT a Big 9 tree nut. Do not flag this 
-  as tree nut. Only flag it under whichever specific allergen (peanut or soy) is separately 
+  - "kekacang" = general legume/bean category term, NOT a Big 9 tree nut. Do not flag this
+  as tree nut. Only flag it under whichever specific allergen (peanut or soy) is separately
   confirmed elsewhere on the label.
   - "kacang pistachio", "badam" (almond), "gajus" (cashew), "walnut" = tree nut
-  - "kacang" alone with no other qualifying word = ambiguous, treat as Mild severity only, 
+  - "kacang" alone with no other qualifying word = ambiguous, treat as Mild severity only,
   and say so in the explanation
-- Before finalizing which allergen category to flag an ingredient under, double check that 
-your stated explanation actually matches the category you chose. If your explanation describes 
-soy, the flagged allergen must be "soy" — never file a soy-described ingredient under a 
+- Before finalizing which allergen category to flag an ingredient under, double check that
+your stated explanation actually matches the category you chose. If your explanation describes
+soy, the flagged allergen must be "soy" — never file a soy-described ingredient under a
 different allergen name.
 - If you are not at least reasonably confident an allergen is present, do not include it at all.
 
+HIDDEN AND ALTERNATIVE NAMES:
+Many ingredients are allergens even though the allergen word itself is not written. If one of
+these names appears in the ingredients list, treat it as that allergen being explicitly listed
+(Severe, or Moderate if it only appears in a "may contain" or facility sentence). Quote the
+exact words from the label, for example "belacan". Only declared allergies are flagged.
+- shellfish: belacan, blacan, terasi, shrimp paste, udang, udang kering, udang geragau,
+cincalok, ketam, krill, krill oil, prawn, shrimp, crab, lobster, crayfish, langoustine, scampi
+- peanut: groundnut, groundnut oil, arachis, arachis oil, arachis hypogaea, monkey nuts,
+earth nut, goober, kacang tanah
+- milk: casein, caseinate, sodium caseinate, whey, whey powder, lactose, lactalbumin,
+lactoglobulin, butterfat, ghee, butter, cheese, cream, yoghurt, susu, mentega, keju
+- egg: albumen, ovalbumin, ovomucoid, ovovitellin, lysozyme, telur
+- tree nut: marzipan, praline, gianduja, nougat, badam, gajus, kacang gajus, walnut, pecan,
+pistachio, hazelnut, almond (including almond milk)
+- soy: soya, soybean, miso, tamari, tempeh, edamame, tauhu, kicap, shoyu
+- wheat: semolina, durum, spelt, farina, bulgur, couscous, seitan, graham, tepung gandum, gluten
+- fish: anchovy, anchovies, ikan bilis, bonito, surimi, fish sauce, budu, isinglass
+- sesame: tahini, gingelly, benne, sesamum, minyak bijan, bijan, wijen
+Do not use this list for anything that is not on the label. The name must actually be written
+in the ingredients.
+
 Your job is to:
 
-1. Identify any of the Big 9 allergens present in the ingredient list: milk, egg, peanut, 
+1. Identify any of the Big 9 allergens present in the ingredient list: milk, egg, peanut,
 tree nut, soy, wheat, fish, shellfish, sesame.
 2. Cross-reference ONLY against the user's declared allergies.
 3. For each matched allergen, assign a severity:
    - Severe: the allergen is explicitly listed as an ingredient
-   - Moderate: label says "may contain" or lists it as a processing warning, OR it appears 
+   - Moderate: label says "may contain" or lists it as a processing warning, OR it appears
    only in a facility/manufacturing disclaimer rather than the ingredients list itself
    - Mild: no direct mention, but a related/derivative ingredient suggests possible presence
 4. Give a short, plain-language explanation for each flagged allergen (1-2 sentences, no jargon).
@@ -108,6 +130,14 @@ Output: {"flagged_allergens": [{"allergen": "milk", "severity": "Moderate", "quo
 Label: "Ingredients: Wheat flour, sugar, salt. DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida."
 Declared allergies: milk, peanut, wheat
 Output: {"flagged_allergens": [{"allergen": "wheat", "severity": "Severe", "quoted_text": "Wheat flour", "explanation": "Wheat flour is listed directly in the ingredients list, separate from the facility disclaimer."}, {"allergen": "peanut", "severity": "Moderate", "quoted_text": "DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida", "explanation": "Peanut (kacang tanah) only appears in the facility disclaimer stating the manufacturer handles peanuts, not in the actual ingredients list."}, {"allergen": "milk", "severity": "Moderate", "quoted_text": "DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida", "explanation": "Milk (susu) only appears in the facility disclaimer, not in the actual ingredients list."}], "safe": false}
+
+Label: "Ingredients: Water, belacan, salt."
+Declared allergies: shellfish, fish
+Output: {"flagged_allergens": [{"allergen": "shellfish", "severity": "Severe", "quoted_text": "belacan", "explanation": "Belacan is fermented shrimp paste, so it is a shellfish ingredient even though the word shellfish is not written."}], "safe": false}
+
+Label: "Ingredients: Sugar, groundnut oil, salt."
+Declared allergies: peanut, sesame
+Output: {"flagged_allergens": [{"allergen": "peanut", "severity": "Severe", "quoted_text": "groundnut oil", "explanation": "Groundnut is another name for peanut, so groundnut oil is a peanut ingredient."}], "safe": false}
 """
 
 def encode_image(image_path):
