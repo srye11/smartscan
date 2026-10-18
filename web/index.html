@@ -67,9 +67,14 @@
     <!-- Scan -->
     <section id="v-scan">
       <h2>Scan ingredient label</h2>
-      <p class="sub">Take a photo of the ingredient list. The AI reads it and checks your allergies.</p>
+      <p class="sub" id="scanSub">Take a photo of the ingredient list. The AI reads it and checks your allergies.</p>
       <div class="grid2">
         <div>
+          <div class="tabs" id="scanModes">
+            <button type="button" id="modePhotoTab" class="on">📷 Scan label</button>
+            <button type="button" id="modeTextTab">⌨️ Type ingredients</button>
+          </div>
+          <div id="modePhoto">
           <div class="dropzone" id="dropzone">
             <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
             <div id="dzEmpty">
@@ -89,12 +94,21 @@
           </div>
           <p class="note">Tip: "Take photo" opens your phone's own camera, which gives a sharper picture than a live video frame.</p>
           <button class="btn dark" id="scanBtn" style="margin-top:12px" disabled>Check for allergens</button>
+          </div>
+
+          <div id="modeText" class="hidden">
+            <label class="lbl" for="ingText" style="margin-top:0">Ingredient list</label>
+            <textarea class="input" id="ingText" maxlength="4000" placeholder="Type or paste the ingredients here, for example: Wheat flour, sugar, skim milk powder, soy lecithin, salt. Bahasa Malaysia works too."></textarea>
+            <p class="note">Use this when the photo is blurry or the label is hard to read. Copy the ingredient list exactly as printed on the pack.</p>
+            <button class="btn dark" id="textBtn" style="margin-top:12px">Check for allergens</button>
+          </div>
+
           <div id="scanMsg" class="msg hidden"></div>
         </div>
         <div class="card" id="resultCard">
           <h3 style="margin-bottom:6px">Progress</h3>
           <ul class="steps" id="steps">
-            <li id="st1"><span class="dot">1</span> Label photo selected</li>
+            <li id="st1"><span class="dot">1</span> <span id="st1t">Label photo selected</span></li>
             <li id="st2"><span class="dot">2</span> Detecting allergens</li>
             <li id="st3"><span class="dot">3</span> Results ready</li>
           </ul>

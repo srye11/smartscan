@@ -5,10 +5,10 @@
 
   const BIG9 = ["Milk", "Egg", "Peanut", "Tree Nut", "Soy", "Wheat", "Fish", "Shellfish", "Sesame"];
   const NAV = [
-    { id: "scan", label: "Scan label", ic: "📷" },
-    { id: "history", label: "Scan history", ic: "🕘" },
-    { id: "recipes", label: "Safe recipes", ic: "🍽️" },
-    { id: "profile", label: "Allergy profile", ic: "⚙️" },
+    { id: "scan", label: "Scan label", short: "Scan", ic: "📷" },
+    { id: "history", label: "Scan history", short: "History", ic: "🕘" },
+    { id: "recipes", label: "Safe recipes", short: "Recipes", ic: "🍽️" },
+    { id: "profile", label: "Allergy profile", short: "Profile", ic: "⚙️" },
   ];
 
   const state = { profile: null, user: null, file: null, signupAllergies: new Set(), profAllergies: new Set(), mode: "signup", recFilter: "All" };
@@ -107,7 +107,7 @@
       a.onclick = () => go(n.id);
       side.appendChild(a);
       const b = document.createElement("button");
-      b.dataset.id = n.id; b.innerHTML = '<span class="ic">' + n.ic + "</span>" + esc(n.label.split(" ").pop());
+      b.dataset.id = n.id; b.innerHTML = '<span class="ic">' + n.ic + "</span>" + esc(n.short);
       b.onclick = () => go(n.id);
       bot.appendChild(b);
     });
@@ -149,7 +149,7 @@
     state.file = null;
     show($("preview"), false); show($("dzEmpty"), true); show($("scanline"), false);
     $("scanBtn").disabled = true;
-    ["st1", "st2", "st3"].forEach((s) => ($(s).className = ""));
+    ["st1", "st2", "st3"].forEach((s, i) => { $(s).className = ""; $(s).firstChild.textContent = String(i + 1); });
     $("resultBody").innerHTML = '<p style="color:var(--muted)">Your results will show here.</p>';
     msg($("scanMsg"), "", "err");
   }
@@ -169,22 +169,92 @@
 
   function sevClass(s) { return s === "Moderate" ? "Moderate" : s === "Mild" ? "Mild" : "Severe"; }
 
-  function renderResult(r, target) {
+  // Map the detector's allergen names (e.g. "milk", "tree nut") to the Big 9 names used by the API.
+  function bigName(a) {
+    const s = String(a || "").toLowerCase().replace(/s$/, "");
+    return BIG9.find((b) => b.toLowerCase() === s || b.toLowerCase().replace(/s$/, "") === s) || null;
+  }
+
+  // ---------- report a wrong result ----------
+  const REPORT_TYPES = [
+    ["false_alarm", "False alarm (flagged, but not there)"],
+    ["missed", "Missed (allergen not flagged)"],
+    ["wrong_severity", "Wrong severity"],
+    ["other", "Something else"],
+  ];
+
+  function openReport(box, scanId, preset) {
+    preset = preset || {};
+    box.innerHTML =
+      '<div class="rform"><b>Report a wrong result</b>' +
+      '<label class="lbl">What went wrong?</label><select class="input r-kind">' +
+      REPORT_TYPES.map((t) => '<option value="' + t[0] + '"' + (t[0] === (preset.kind || "false_alarm") ? " selected" : "") + ">" + esc(t[1]) + "</option>").join("") +
+      '</select><label class="lbl">Which allergen? (optional)</label><select class="input r-allergen"><option value="">Not sure / not applicable</option>' +
+      BIG9.map((a) => '<option value="' + a + '"' + (a === preset.allergen ? " selected" : "") + ">" + esc(a) + "</option>").join("") +
+      '</select><label class="lbl">Tell us more (optional)</label>' +
+      '<textarea class="input r-note" maxlength="500" placeholder="For example: the label says coconut milk, which is not dairy."></textarea>' +
+      '<div class="rbtns"><button type="button" class="btn r-send">Send report</button><button type="button" class="btn ghost r-cancel">Cancel</button></div>' +
+      '<div class="msg hidden r-msg"></div></div>';
+    box.querySelector(".r-cancel").onclick = () => { box.innerHTML = reportLink(); wireReportLink(box, scanId); };
+    box.querySelector(".r-send").onclick = async (e) => {
+      const btn = e.currentTarget;
+      const m = box.querySelector(".r-msg");
+      btn.disabled = true;
+      try {
+        await api("/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scan_id: scanId,
+            kind: box.querySelector(".r-kind").value,
+            allergen: box.querySelector(".r-allergen").value || null,
+            note: box.querySelector(".r-note").value.trim() || null,
+          }),
+        });
+        box.innerHTML = '<div class="msg ok">Thank you! Your report was saved.</div>';
+      } catch (err) {
+        msg(m, err.message, "err");
+        btn.disabled = false;
+      }
+    };
+  }
+
+  function reportLink() { return '<button type="button" class="rlink-main">⚑ Something wrong? Report this result</button>'; }
+  function wireReportLink(box, scanId) {
+    const b = box.querySelector(".rlink-main");
+    if (b) b.onclick = () => openReport(box, scanId, {});
+  }
+
+  function renderResult(r, target, scanId) {
     const flagged = (r && r.flagged_allergens) || [];
+    let html;
     if (!flagged.length) {
-      target.innerHTML = '<div class="safe">✓ No allergens from your profile were found on this label.</div>' +
+      html = '<div class="safe">✓ No allergens from your profile were found.</div>' +
         '<p class="note">Always double-check the packaging. SmartScan is a helper, not a medical guarantee.</p>';
-      return;
+    } else {
+      html = '<div class="sec">ALLERGENS FOUND</div>';
+      flagged.forEach((f, i) => {
+        const sev = sevClass(f.severity);
+        html += '<div class="res ' + sev + '"><div class="top"><span class="name">' + esc(f.allergen) + '</span><span class="badge">' + esc(sev) + "</span></div>" +
+          (f.quoted_text ? '<div class="q">Found: <b>' + esc(f.quoted_text) + "</b></div>" : "") +
+          (f.explanation ? '<div class="why">' + esc(f.explanation) + "</div>" : "") +
+          (scanId != null ? '<button type="button" class="rlink" data-i="' + i + '">Wrong? Report</button>' : "") + "</div>";
+      });
+      html += '<p class="note">Severe = listed as an ingredient. Moderate = "may contain" or shared facility warning.</p>';
     }
-    let html = '<div class="sec">ALLERGENS FOUND</div>';
-    flagged.forEach((f) => {
-      const sev = sevClass(f.severity);
-      html += '<div class="res ' + sev + '"><div class="top"><span class="name">' + esc(f.allergen) + '</span><span class="badge">' + esc(sev) + "</span></div>" +
-        (f.quoted_text ? '<div class="q">Found on label: <b>' + esc(f.quoted_text) + "</b></div>" : "") +
-        (f.explanation ? '<div class="why">' + esc(f.explanation) + "</div>" : "") + "</div>";
-    });
-    html += '<p class="note">Severe = listed as an ingredient. Moderate = "may contain" or shared facility warning.</p>';
+    if (scanId != null) html += '<div class="reportbox">' + reportLink() + "</div>";
     target.innerHTML = html;
+    if (scanId != null) {
+      const box = target.querySelector(".reportbox");
+      wireReportLink(box, scanId);
+      target.querySelectorAll(".rlink").forEach((b) => {
+        b.onclick = () => {
+          const f = flagged[Number(b.dataset.i)];
+          openReport(box, scanId, { kind: "false_alarm", allergen: bigName(f.allergen) });
+          box.scrollIntoView({ behavior: "smooth", block: "center" });
+        };
+      });
+    }
   }
 
   $("scanBtn").onclick = async () => {
@@ -203,7 +273,7 @@
       const r = await api("/scan", { method: "POST", body: fd });
       $("st2").className = "done"; $("st2").firstChild.textContent = "✓";
       $("st3").className = "done"; $("st3").firstChild.textContent = "✓";
-      renderResult(r.allergen_result, $("resultBody"));
+      renderResult(r.allergen_result, $("resultBody"), r.id);
       msg($("scanMsg"), "Saved to your scan history.", "ok");
     } catch (err) {
       $("st2").className = "";
@@ -212,6 +282,54 @@
     } finally {
       clearTimeout(slow);
       show($("scanline"), false);
+      btn.disabled = false;
+    }
+  };
+
+  // ---------- type ingredients mode ----------
+  function setScanMode(mode) {
+    state.scanMode = mode;
+    const photo = mode === "photo";
+    $("modePhotoTab").classList.toggle("on", photo);
+    $("modeTextTab").classList.toggle("on", !photo);
+    show($("modePhoto"), photo);
+    show($("modeText"), !photo);
+    $("scanSub").textContent = photo
+      ? "Take a photo of the ingredient list. The AI reads it and checks your allergies."
+      : "Type or paste the ingredient list. The AI checks it against your allergies.";
+    $("st1t").textContent = photo ? "Label photo selected" : "Ingredients entered";
+    resetScan();
+  }
+  $("modePhotoTab").onclick = () => setScanMode("photo");
+  $("modeTextTab").onclick = () => setScanMode("text");
+
+  $("textBtn").onclick = async () => {
+    const text = $("ingText").value.trim();
+    if (text.length < 3) { msg($("scanMsg"), "Type or paste the ingredient list first.", "err"); return; }
+    const btn = $("textBtn");
+    btn.disabled = true;
+    msg($("scanMsg"), "", "err");
+    $("st1").className = "done"; $("st1").firstChild.textContent = "✓";
+    $("st2").className = "on";
+    $("st3").className = "";
+    $("resultBody").innerHTML = '<p style="color:var(--muted)">Checking the ingredients…</p>';
+    const slow = setTimeout(() => msg($("scanMsg"), "The server was asleep and is waking up. This can take up to a minute the first time.", "info"), 8000);
+    try {
+      const r = await api("/scan-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      $("st2").className = "done"; $("st2").firstChild.textContent = "✓";
+      $("st3").className = "done"; $("st3").firstChild.textContent = "✓";
+      renderResult(r.allergen_result, $("resultBody"), r.id);
+      msg($("scanMsg"), "Saved to your scan history.", "ok");
+    } catch (err) {
+      $("st2").className = "";
+      $("resultBody").innerHTML = '<p style="color:var(--muted)">No result.</p>';
+      msg($("scanMsg"), err.message, "err");
+    } finally {
+      clearTimeout(slow);
       btn.disabled = false;
     }
   };
@@ -232,14 +350,17 @@
         const tags = flagged.length
           ? flagged.map((f) => '<span class="tag ' + (f.severity === "Moderate" ? "m" : f.severity === "Mild" ? "l" : "s") + '">' + esc(f.allergen) + "</span>").join("")
           : '<span class="tag l">✓ Safe</span>';
-        card.innerHTML =
-          (r.image_url ? '<img src="' + esc(r.image_url) + '" alt="Scanned label">' : '<img alt="">') +
+        const isText = !r.image_path && r.input_text;
+        const thumb = r.image_url ? '<img src="' + esc(r.image_url) + '" alt="Scanned label">'
+          : isText ? '<div class="txtthumb">⌨️</div>' : '<img alt="">';
+        const snip = isText ? '<div class="snip">Typed: "' + esc(r.input_text.length > 110 ? r.input_text.slice(0, 110) + "…" : r.input_text) + '"</div>' : "";
+        card.innerHTML = thumb +
           '<div class="body"><b>Scan ' + (rows.length - i) + (i === 0 ? " (most recent)" : "") + '</b><div class="when">' +
-          esc(d.toLocaleString()) + "</div><div>" + tags + '</div><div class="acts"><button class="view">View result</button><button class="del">Delete</button></div>' +
+          esc(d.toLocaleString()) + "</div>" + snip + "<div>" + tags + '</div><div class="acts"><button class="view">View result</button><button class="del">Delete</button></div>' +
           '<div class="detail hidden"></div></div>';
         const detail = card.querySelector(".detail");
         card.querySelector(".view").onclick = () => {
-          if (detail.classList.contains("hidden")) renderResult(r.allergen_result, detail);
+          if (detail.classList.contains("hidden")) renderResult(r.allergen_result, detail, r.id);
           detail.classList.toggle("hidden");
         };
         card.querySelector(".del").onclick = async () => {
