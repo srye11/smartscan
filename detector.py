@@ -52,6 +52,17 @@ the actual ingredients list itself, separately from any facility disclaimer.
 your stated explanation actually matches the category you chose. If your explanation describes
 soy, the flagged allergen must be "soy" — never file a soy-described ingredient under a
 different allergen name.
+- The quoted_text MUST itself contain the allergen: its name, its Malay name, or a name from the
+HIDDEN AND ALTERNATIVE NAMES list. If the quote does not contain a word for that allergen, do
+not flag it. A line such as "CONTAINS: WHEAT, MILK, SOY" only proves wheat, milk and soy. It says
+nothing about any other allergen, so never use it as the quote for fish, egg, peanut or anything
+that is not named in it. The same applies in Malay: "Mengandungi kacang soya, gandum" only proves soy
+and wheat. It does not prove milk, egg, fish or any allergen that is not named in it.
+- NEVER copy a phrase from the EXAMPLES below into your answer. The examples are only to show the
+format. If the text in the image is too small, blurry, curved, glared or cut off to read, do not
+guess and do not fill the gap with a sentence you remember. Only flag what you can actually read
+in this image. If you cannot read the ingredient text at all, return an empty flagged_allergens list
+and set "safe" to false, and add a top-level field "unreadable": true.
 - If you are not at least reasonably confident an allergen is present, do not include it at all.
 
 HIDDEN AND ALTERNATIVE NAMES:
@@ -73,7 +84,18 @@ pistachio, hazelnut, almond (including almond milk)
 - fish: anchovy, anchovies, ikan bilis, bonito, surimi, fish sauce, budu, isinglass
 - sesame: tahini, gingelly, benne, sesamum, minyak bijan, bijan, wijen
 Do not use this list for anything that is not on the label. The name must actually be written
-in the ingredients.
+in the ingredients. Match the whole name, not a similar-looking word.
+
+LOOK-ALIKES THAT ARE NOT ALLERGENS (never flag these on their own):
+- sodium glutamate, monosodium glutamate, MSG, E621 (a flavour enhancer, NOT milk, NOT soy, and
+  NOT the same as sodium caseinate)
+- lactic acid, calcium lactate, sodium lactate (NOT milk)
+- cocoa butter, shea butter (NOT milk)
+- coconut milk, santan (NOT dairy milk)
+- nutmeg, pala, butternut squash, water chestnut (NOT tree nuts)
+- buckwheat, bukwit (NOT wheat)
+- eggplant, terung, brinjal (NOT egg)
+- cream of tartar (NOT milk)
 
 Your job is to:
 
@@ -84,7 +106,9 @@ tree nut, soy, wheat, fish, shellfish, sesame.
    - Severe: the allergen is explicitly listed as an ingredient
    - Moderate: label says "may contain" or lists it as a processing warning, OR it appears
    only in a facility/manufacturing disclaimer rather than the ingredients list itself
-   - Mild: no direct mention, but a related/derivative ingredient suggests possible presence
+   - Mild: only for an ambiguous term whose meaning is unclear (for example "kacang" alone).
+   Never use Mild or Moderate to guess that an allergen might be present when the label does not
+   name it.
 4. Give a short, plain-language explanation for each flagged allergen (1-2 sentences, no jargon).
 
 Respond ONLY in this JSON format, nothing else:
@@ -130,6 +154,18 @@ Output: {"flagged_allergens": [{"allergen": "milk", "severity": "Moderate", "quo
 Label: "Ingredients: Wheat flour, sugar, salt. DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida."
 Declared allergies: milk, peanut, wheat
 Output: {"flagged_allergens": [{"allergen": "wheat", "severity": "Severe", "quoted_text": "Wheat flour", "explanation": "Wheat flour is listed directly in the ingredients list, separate from the facility disclaimer."}, {"allergen": "peanut", "severity": "Moderate", "quoted_text": "DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida", "explanation": "Peanut (kacang tanah) only appears in the facility disclaimer stating the manufacturer handles peanuts, not in the actual ingredients list."}, {"allergen": "milk", "severity": "Moderate", "quoted_text": "DIKELUARKAN OLEH PENGILANG mengendali kacang soya, krustasia, gandum, kacang tanah, moluska, bijan, biji sawi, ikan, susu, sulfur dioksida", "explanation": "Milk (susu) only appears in the facility disclaimer, not in the actual ingredients list."}], "safe": false}
+
+Label: "Ingredients: Skim milk, soy sauce (water, soybeans, wheat, salt), wheat flour, sugar. CONTAINS: WHEAT, MILK, SOY."
+Declared allergies: milk, soy, wheat, fish, egg
+Output: {"flagged_allergens": [{"allergen": "milk", "severity": "Severe", "quoted_text": "Skim milk", "explanation": "Skim milk is listed as an ingredient."}, {"allergen": "soy", "severity": "Severe", "quoted_text": "soy sauce (water, soybeans, wheat, salt)", "explanation": "Soy sauce is made from soybeans."}, {"allergen": "wheat", "severity": "Severe", "quoted_text": "wheat flour", "explanation": "Wheat flour is listed as an ingredient."}], "safe": false}
+
+Label: "Ramuan: Kicap kacang soya, tepung gandum, gula, garam. Mengandungi kacang soya, gandum."
+Declared allergies: milk, soy, wheat, egg
+Output: {"flagged_allergens": [{"allergen": "soy", "severity": "Severe", "quoted_text": "Kicap kacang soya", "explanation": "Kicap kacang soya (soy sauce) is listed as an ingredient."}, {"allergen": "wheat", "severity": "Severe", "quoted_text": "tepung gandum", "explanation": "Tepung gandum (wheat flour) is listed as an ingredient."}], "safe": false}
+
+Label: "Ingredients: Rice, salt, flavour enhancer (sodium glutamate), lactic acid, coconut milk."
+Declared allergies: milk, soy, egg, tree nut
+Output: {"flagged_allergens": [], "safe": true}
 
 Label: "Ingredients: Water, belacan, salt."
 Declared allergies: shellfish, fish

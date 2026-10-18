@@ -177,6 +177,13 @@ def scan(file: UploadFile = File(...), user=Depends(get_user)):
     if allergen_result is None:
         raise HTTPException(status_code=502, detail="Could not read the label clearly. Please retake the photo.")
 
+    # The AI says it cannot read the ingredient text. Never show that as a normal result.
+    if allergen_result.get("unreadable"):
+        raise HTTPException(
+            status_code=422,
+            detail="Could not read the ingredient text clearly. Please retake the photo closer and flatter, or use Type ingredients.",
+        )
+
     path = f"{user['id']}/{uuid.uuid4().hex}.jpg"
     supabase.storage.from_(BUCKET).upload(path, jpeg, {"content-type": "image/jpeg"})
     row = {
