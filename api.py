@@ -16,7 +16,7 @@ from supabase import create_client
 
 # client and SYSTEM_PROMPT are reused for the typed-ingredients mode,
 # so photo scans and text scans follow exactly the same rules.
-from detector import detect_allergens, client, SYSTEM_PROMPT
+from detector import detect_allergens, client, SYSTEM_PROMPT, clean_result
 
 load_dotenv()
 
@@ -104,7 +104,7 @@ def detect_allergens_text(text, allergies):
         if raw.lower().startswith("json"):
             raw = raw[4:]
     try:
-        return json.loads(raw)
+        return clean_result(json.loads(raw), allergies)
     except json.JSONDecodeError:
         logging.warning("Model did not return clean JSON for text scan: %s", raw[:200])
         return None

@@ -1,5 +1,6 @@
 import base64
 import json
+import re
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -176,6 +177,182 @@ Declared allergies: peanut, sesame
 Output: {"flagged_allergens": [{"allergen": "peanut", "severity": "Severe", "quoted_text": "groundnut oil", "explanation": "Groundnut is another name for peanut, so groundnut oil is a peanut ingredient."}], "safe": false}
 """
 
+
+# ---------------------------------------------------------------------------
+# Safety net: drop any flag whose quoted_text does not actually contain a word
+# for that allergen. The prompt already says this, but the model sometimes ignores
+# it (e.g. quoting "CONTAINS: WHEAT, MILK, SOY" as proof of fish). This check does
+# not depend on the model obeying the prompt.
+# ---------------------------------------------------------------------------
+_NUTS = r"nuts?(?![a-z])"
+
+ALLERGEN_TERMS = {
+    "milk": [
+        "milk", "susu", "dairy", "tenusu", "whey", "casein", "caseinate", "lactose", "laktosa",
+        "lactalbumin", "lactoglobulin", "butter", "butterfat", "ghee", "cream", "cheese", "keju",
+        "mentega", "yogurt", "yoghurt", "yogurt", "krim",
+    ],
+    "egg": ["egg", "telur", "albumen", "ovalbumin", "ovomucoid", "ovovitellin", "lysozyme"],
+    "peanut": [
+        "peanut", "groundnut", "arachis", "kacang tanah", "monkey nut", "earth nut", "goober",
+        "kacang(?![a-z])", _NUTS,
+    ],
+    "tree nut": [
+        _NUTS, "almond", "badam", "cashew", "gajus", "walnut", "pecan", "pistachio", "hazelnut",
+        "macadamia", "chestnut", "marzipan", "praline", "gianduja", "nougat", "kacang(?![a-z])",
+    ],
+    "soy": [
+        "soy", "soja", "kicap", "miso", "tamari", "tempeh", "tempe(?![a-z])", "edamame", "tauhu",
+        "tofu", "shoyu",
+    ],
+    "wheat": [
+        "wheat", "gandum", "gluten", "semolina", "durum", "spelt", "farina", "bulgur", "couscous",
+        "seitan", "graham",
+    ],
+    "fish": [
+        "fish", "ikan", "anchovy", "anchovies", "bilis", "bonito", "surimi", "budu", "isinglass",
+        "salmon", "tuna", "cod(?![a-z])", "sardine", "mackerel", "kembung", "tenggiri", "haddock",
+    ],
+    "shellfish": [
+        "shellfish", "shrimp", "prawn", "udang", "crab", "ketam", "lobster", "krill", "crayfish",
+        "langoustine", "scampi", "belacan", "blacan", "terasi", "cincalok", "krustas",
+        "crustacean", "mollus", "moluska", "oyster", "tiram", "clams?(?![a-z])", "kerang", "mussel",
+        "squid", "sotong", "scallop",
+    ],
+    "sesame": ["sesame", "bijan", "wijen", "tahini", "gingelly", "benne", "sesamum"],
+}
+
+# Look-alike phrases removed from the quote BEFORE checking, per allergen.
+_BEANS = ["kacang soya", "kacang soja", "kacang hijau", "kacang merah", "kacang panjang", "kekacang"]
+NEUTRAL_PHRASES = {
+    "milk": [
+        "coconut milk", "almond milk", "soy milk", "soya milk", "oat milk", "rice milk", "cashew milk",
+        "santan", "susu soya", "susu kacang soya", "susu badam", "susu kelapa", "cocoa butter",
+        "shea butter", "peanut butter", "nut butter", "butternut", "cream of tartar", "coconut cream",
+        "milk thistle",
+    ],
+    "egg": ["eggplant", "terung", "brinjal"],
+    "peanut": _BEANS,
+    "tree nut": ["nutmeg", "pala", "butternut", "water chestnut", "kacang tanah"] + _BEANS,
+    "wheat": ["buckwheat", "bukwit", "gluten free", "gluten-free"],
+}
+
+_ALLERGEN_ALIASES = {
+    "tree nuts": "tree nut", "treenut": "tree nut", "nut": "tree nut", "nuts": "tree nut",
+    "dairy": "milk", "eggs": "egg", "soya": "soy", "crustacean": "shellfish",
+}
+
+_PATTERNS = {
+    a: re.compile(r"(?<![a-z])(?:" + "|".join(terms) + ")") for a, terms in ALLERGEN_TERMS.items()
+}
+
+
+def _quote_supports(allergen, quote):
+    """True if the quote contains a real word for this allergen."""
+    if allergen not in _PATTERNS:
+        return True  # unknown allergen name: do not filter
+    text = " " + (quote or "").lower() + " "
+    for phrase in NEUTRAL_PHRASES.get(allergen, []):
+        text = text.replace(phrase, " ")
+    return bool(_PATTERNS[allergen].search(text))
+
+
+# Words that show a text is a "may contain / factory" warning, or a definite "contains" statement.
+_MAY = re.compile(
+    r"may contain|mungkin mengandungi|traces?|sisa|facility|factory|kilang|pengilang|processed|diproses|"
+    r"mengendali|handles?"
+)
+_SURE = re.compile(r"(?<!may )contains?(?![a-z])|(?<!mungkin )mengandungi")
+
+
+def _severity_at(quote, pos, default):
+    """Severity for an allergen that appears at position pos inside the quote."""
+    before = (quote or "").lower()[:pos]
+    may = [m.start() for m in _MAY.finditer(before)]
+    sure = [m.start() for m in _SURE.finditer(before)]
+    if may and (not sure or may[-1] > sure[-1]):
+        return "Moderate"
+    if sure:
+        return "Severe"
+    return default
+
+
+# For ADDING an allergen we use stricter words than for checking a quote: the bare word "nuts" or
+# "kacang" is too vague to add peanut, and "kacang" alone is too vague to add tree nut.
+_EXPAND_TERMS = {
+    a: [t for t in terms if not t.startswith("kacang(?!") and not (a == "peanut" and t == _NUTS)]
+    for a, terms in ALLERGEN_TERMS.items()
+}
+_EXPAND_PATTERNS = {
+    a: re.compile(r"(?<![a-z])(?:" + "|".join(terms) + ")") for a, terms in _EXPAND_TERMS.items()
+}
+
+
+def _expand(kept, declared):
+    """One quote often names several allergens ("May contain: fish, egg, milk"), but the AI tends to
+    report only one of them. If a kept quote also contains the name of another DECLARED allergen that
+    was not reported, add it. Nothing is added unless its name is written in a quote the AI gave."""
+    wanted = []
+    for d in declared or []:
+        d = _ALLERGEN_ALIASES.get(str(d).strip().lower(), str(d).strip().lower())
+        if d in _EXPAND_PATTERNS and d not in wanted:
+            wanted.append(d)
+    have = {str(i.get("allergen", "")).strip().lower() for i in kept}
+    added = []
+    for item in list(kept):
+        quote = item.get("quoted_text") or ""
+        for a in wanted:
+            if a in have:
+                continue
+            text = " " + quote.lower() + " "
+            for phrase in NEUTRAL_PHRASES.get(a, []):
+                text = text.replace(phrase, " ")
+            m = _EXPAND_PATTERNS[a].search(text)
+            if not m:
+                continue
+            sev = _severity_at(text, m.start(), item.get("severity") or "Moderate")
+            new_item = {
+                "allergen": a,
+                "severity": sev,
+                "quoted_text": quote,
+                "explanation": f"The same label text also names {a}.",
+                "added_by_guard": True,
+            }
+            kept.append(new_item)
+            have.add(a)
+            added.append({"allergen": a, "quoted_text": quote})
+    return added
+
+
+def clean_result(result, declared=None):
+    """1) Remove flags whose quote does not mention the allergen.
+    2) Add declared allergens that are named in a quote the AI already gave but were not reported.
+    Keeps a record of what was dropped / added."""
+    if not isinstance(result, dict) or result.get("unreadable"):
+        return result
+    kept, dropped = [], []
+    for item in result.get("flagged_allergens", []) or []:
+        name = str(item.get("allergen", "")).strip().lower()
+        name = _ALLERGEN_ALIASES.get(name, name)
+        if name not in _PATTERNS:
+            # Not one of the Big 9 (for example "coconut"). Never show it as an allergen.
+            dropped.append({"allergen": name, "quoted_text": item.get("quoted_text")})
+            continue
+        if _quote_supports(name, item.get("quoted_text")):
+            item["allergen"] = name
+            kept.append(item)
+        else:
+            dropped.append({"allergen": name, "quoted_text": item.get("quoted_text")})
+    added = _expand(kept, declared) if declared else []
+    result["flagged_allergens"] = kept
+    result["safe"] = len(kept) == 0
+    if dropped:
+        result["dropped_by_guard"] = dropped
+    if added:
+        result["added_by_guard"] = added
+    return result
+
+
 def encode_image(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
@@ -202,7 +379,7 @@ def detect_allergens(image_path, declared_allergies):
     raw_output = response.choices[0].message.content
 
     try:
-        return json.loads(raw_output)
+        return clean_result(json.loads(raw_output), declared_allergies)
     except json.JSONDecodeError:
         print("Model didn't return clean JSON:", raw_output)
         return None
