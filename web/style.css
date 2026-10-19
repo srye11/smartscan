@@ -172,3 +172,14 @@ select.input{appearance:auto;background:#fff}
 .txtthumb{width:90px;height:90px;border-radius:10px;background:var(--green-soft);display:grid;place-items:center;font-size:34px;flex:none}
 .snip{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word}
 #scanModes{margin-bottom:14px}
+
+/* ---------- optional crop ---------- */
+.croprow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.croprow .btn{width:auto;flex:1 1 160px;padding:11px 14px}
+.modal{position:fixed;inset:0;background:rgba(6,20,26,.86);z-index:50;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal-box{background:#fff;border-radius:var(--radius);width:100%;max-width:760px;padding:14px;max-height:100%;display:flex;flex-direction:column;gap:10px}
+.modal-box h3{margin:0}
+.crop-stage{height:min(62vh,520px);background:#0d1217;border-radius:10px;overflow:hidden}
+.crop-stage img{display:block;max-width:100%}
+.crop-btns{display:flex;gap:10px;flex-wrap:wrap}
+.crop-btns .btn{width:auto;flex:1 1 110px;padding:12px}

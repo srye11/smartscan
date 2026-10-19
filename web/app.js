@@ -147,6 +147,9 @@
   // ---------- scan ----------
   function resetScan() {
     state.file = null;
+    state.originalFile = null;
+    show($("cropRow"), false); show($("cropReset"), false);
+    $("cropBtn").textContent = "✂️ Crop (optional)";
     show($("preview"), false); show($("dzEmpty"), true); show($("scanline"), false);
     $("scanBtn").disabled = true;
     ["st1", "st2", "st3"].forEach((s, i) => { $(s).className = ""; $(s).firstChild.textContent = String(i + 1); });
@@ -158,14 +161,111 @@
     if (!f) return;
     resetScan();
     state.file = f;
+    state.originalFile = f;
     const url = URL.createObjectURL(f);
     $("preview").src = url;
     show($("preview"), true); show($("dzEmpty"), false);
+    show($("cropRow"), true);
     $("st1").className = "done"; $("st1").firstChild.textContent = "✓";
     $("scanBtn").disabled = false;
   }
   $("camInput").onchange = (e) => { pickFile(e.target.files[0]); e.target.value = ""; };
   $("fileInput").onchange = (e) => { pickFile(e.target.files[0]); e.target.value = ""; };
+
+  // ---------- optional crop ----------
+  // The user can crop the photo to just the ingredient list before scanning. It is only an option:
+  // if they never press Crop, the original photo is scanned exactly as before.
+  let cropper = null;
+  let cropUrl = null;
+
+  // Draw the photo on a canvas first, so the browser applies the phone's rotation once,
+  // then the crop tool works on a correctly rotated picture.
+  function normalisedImageUrl(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 3000;
+        const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob((b) => (b ? resolve(URL.createObjectURL(b)) : reject(new Error("Could not open this photo for cropping."))), "image/jpeg", 0.92);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not open this photo for cropping.")); };
+      img.src = url;
+    });
+  }
+
+  function closeCrop() {
+    if (cropper) { cropper.destroy(); cropper = null; }
+    if (cropUrl) { URL.revokeObjectURL(cropUrl); cropUrl = null; }
+    $("cropImg").removeAttribute("src");
+    show($("cropModal"), false);
+    document.body.style.overflow = "";
+  }
+
+  async function openCrop() {
+    if (!state.originalFile) return;
+    if (!window.Cropper) {
+      msg($("scanMsg"), "The crop tool could not load. Check your connection and refresh the page. You can still scan the whole photo.", "err");
+      return;
+    }
+    msg($("scanMsg"), "", "err");
+    try {
+      cropUrl = await normalisedImageUrl(state.originalFile);
+    } catch (err) {
+      msg($("scanMsg"), err.message || "Could not open the crop tool.", "err");
+      return;
+    }
+    const img = $("cropImg");
+    img.onload = () => {
+      if (cropper) cropper.destroy();
+      cropper = new window.Cropper(img, {
+        viewMode: 1,
+        dragMode: "crop",
+        autoCropArea: 0.9,
+        background: false,
+        checkOrientation: false,
+        scalable: false,
+        toggleDragModeOnDblclick: false,
+      });
+    };
+    img.src = cropUrl;
+    show($("cropModal"), true);
+    document.body.style.overflow = "hidden";
+  }
+
+  $("cropBtn").onclick = openCrop;
+  $("cropCancel").onclick = closeCrop;
+  $("cropRotate").onclick = () => { if (cropper) cropper.rotate(90); };
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("cropModal").classList.contains("hidden")) closeCrop();
+  });
+
+  $("cropApply").onclick = () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ maxWidth: 3000, maxHeight: 3000, imageSmoothingQuality: "high", fillColor: "#fff" });
+    if (!canvas) { msg($("scanMsg"), "Please draw a crop box first.", "err"); return; }
+    canvas.toBlob((blob) => {
+      if (!blob) { msg($("scanMsg"), "Could not crop this photo. You can still scan the whole photo.", "err"); closeCrop(); return; }
+      state.file = new File([blob], "cropped-label.jpg", { type: "image/jpeg" });
+      $("preview").src = URL.createObjectURL(state.file);
+      show($("cropReset"), true);
+      $("cropBtn").textContent = "✂️ Crop again";
+      closeCrop();
+    }, "image/jpeg", 0.92);
+  };
+
+  $("cropReset").onclick = () => {
+    if (!state.originalFile) return;
+    state.file = state.originalFile;
+    $("preview").src = URL.createObjectURL(state.originalFile);
+    show($("cropReset"), false);
+    $("cropBtn").textContent = "✂️ Crop (optional)";
+  };
 
   function sevClass(s) { return s === "Moderate" ? "Moderate" : s === "Mild" ? "Mild" : "Severe"; }
 

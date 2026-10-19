@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#064e3b">
 <title>SmartScan</title>
 <link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -92,7 +93,11 @@
               </label>
             </div>
           </div>
-          <p class="note">Tip: "Take photo" opens your phone's own camera, which gives a sharper picture than a live video frame.</p>
+          <div class="croprow hidden" id="cropRow">
+            <button type="button" class="btn ghost" id="cropBtn">✂️ Crop (optional)</button>
+            <button type="button" class="btn ghost hidden" id="cropReset">↺ Use original photo</button>
+          </div>
+          <p class="note">Tip: "Take photo" opens your phone's own camera, which gives a sharper picture than a live video frame. You can crop the photo to just the ingredient list if you want.</p>
           <button class="btn dark" id="scanBtn" style="margin-top:12px" disabled>Check for allergens</button>
           </div>
 
@@ -150,9 +155,24 @@
   <nav class="bottom" id="bottomNav"></nav>
 </div>
 
+<!-- ===== OPTIONAL CROP ===== -->
+<div id="cropModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Crop photo">
+  <div class="modal-box">
+    <h3>Crop the photo</h3>
+    <p class="note" style="margin:0">Drag the box over just the ingredient list. Pinch or scroll to zoom.</p>
+    <div class="crop-stage"><img id="cropImg" alt="Photo to crop"></div>
+    <div class="crop-btns">
+      <button type="button" class="btn ghost" id="cropRotate">⟳ Rotate</button>
+      <button type="button" class="btn ghost" id="cropCancel">Cancel</button>
+      <button type="button" class="btn dark" id="cropApply">Use this crop</button>
+    </div>
+  </div>
+</div>
+
 <div id="boot" style="min-height:100vh;display:grid;place-items:center;color:#6b7f88">Loading SmartScan…</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="config.js"></script>
 <script src="recipes.js"></script>
 <script src="app.js"></script>
