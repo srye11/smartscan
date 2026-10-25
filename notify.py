@@ -79,12 +79,23 @@ def _email(text):
 
 def notify_report(info):
     text = build_text(info)
+    logging.warning("Report received (scan %s): trying to send alert", info.get("scan_id"))
+    sent_any = False
     for name, fn in (("telegram", _telegram), ("email", _email)):
         try:
             if fn(text):
+                sent_any = True
                 logging.warning("Report alert sent by %s", name)
         except Exception:
             logging.exception("Report alert by %s failed", name)
+    if not sent_any:
+        have_token = bool(os.getenv("TELEGRAM_BOT_TOKEN"))
+        have_chat = bool(os.getenv("TELEGRAM_CHAT_ID"))
+        logging.warning(
+            "No alert was sent. TELEGRAM_BOT_TOKEN found: %s. TELEGRAM_CHAT_ID found: %s. "
+            "Check the names in Render > Environment, then redeploy.",
+            have_token, have_chat,
+        )
 
 
 if __name__ == "__main__":

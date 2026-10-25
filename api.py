@@ -7,7 +7,7 @@ import uuid
 
 import requests
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from PIL import Image, ImageOps
@@ -17,6 +17,7 @@ from supabase import create_client
 # client and SYSTEM_PROMPT are reused for the typed-ingredients mode,
 # so photo scans and text scans follow exactly the same rules.
 from detector import detect_allergens, client, SYSTEM_PROMPT, clean_result
+from notify import notify_report
 
 load_dotenv()
 
@@ -227,7 +228,7 @@ def scan_text(body: TextIn, user=Depends(get_user)):
 
 
 @app.post("/report")
-def report(body: ReportIn, user=Depends(get_user)):
+def report(body: ReportIn, background: BackgroundTasks, user=Depends(get_user)):
     if body.kind not in REPORT_KINDS:
         raise HTTPException(status_code=400, detail="Unknown report type")
     if body.allergen and body.allergen not in BIG9:
@@ -256,6 +257,19 @@ def report(body: ReportIn, user=Depends(get_user)):
             "input_text": scan_row.get("input_text"),
         }
     ).execute()
+    # Tell the developer (Telegram / email, if configured). Runs after the reply is sent.
+    snapshot = scan_row.get("allergen_result") or {}
+    background.add_task(
+        notify_report,
+        {
+            "kind": body.kind,
+            "allergen": body.allergen,
+            "note": note,
+            "scan_id": scan_row["id"],
+            "flagged": [str(i.get("allergen")) for i in (snapshot.get("flagged_allergens") or [])],
+            "input_text": scan_row.get("input_text"),
+        },
+    )
     return {"ok": True}
 
 
