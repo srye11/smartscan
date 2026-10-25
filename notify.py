@@ -25,9 +25,9 @@ import requests
 
 
 def build_text(info):
-    """info: dict with kind, allergen, note, scan_id, flagged (list of names), input_text."""
+    """info: dict with kind, allergen, note, scan_id, scan_type, flagged (list of names), input_text."""
     lines = [
-        "SmartScan: new report",
+        f"SmartScan: new report ({info.get('scan_type') or 'allergy'} scan)",
         f"Type: {info.get('kind') or '-'}",
         f"Allergen: {info.get('allergen') or '-'}",
         f"Scan ID: {info.get('scan_id')}",

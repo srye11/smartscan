@@ -183,3 +183,23 @@ select.input{appearance:auto;background:#fff}
 .crop-stage img{display:block;max-width:100%}
 .crop-btns{display:flex;gap:10px;flex-wrap:wrap}
 .crop-btns .btn{width:auto;flex:1 1 110px;padding:12px}
+
+/* ---------- halal section + history labels ---------- */
+#v-scan.halal{--teal:#6b4a00;--teal-dark:#523800;--green:#4a3300;--green-soft:#f6efdc}
+#v-scan.halal .dropzone .corner,#v-scan.halal .scanline{border-color:#e6b84a}
+#v-scan.halal .scanline{background:#e6b84a;box-shadow:0 0 12px #e6b84a}
+.halalnote{background:#f6efdc;border:1px solid #e6c97a;color:#4a3300;border-radius:12px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+.hbanner{font-weight:800;padding:12px 14px;border-radius:12px;margin-bottom:12px;border:1px solid var(--red);background:var(--red-soft);color:var(--red)}
+.hbanner.Moderate{border-color:var(--amber);background:var(--amber-soft);color:#7a5200}
+.hbanner.Warn{border-color:#8497b0;background:#eef2f7;color:#34465f}
+.res.Warn{border-color:#8497b0;background:#eef2f7}
+.res.Warn .badge{background:#55657a}
+.res.Warn .rlink{color:#34465f}
+.tag.w{background:#eef2f7;color:#34465f}
+.readtext{margin-top:12px;font-size:12px;color:var(--muted)}
+.readtext summary{cursor:pointer;font-weight:700}
+.readtext p{margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:8px;word-break:break-word}
+.hist .hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kind{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.kind.allergy{background:var(--green-soft);color:var(--green)}
+.kind.halal{background:#f6efdc;color:#4a3300;border:1px solid #e6c97a}

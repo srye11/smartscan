@@ -67,8 +67,9 @@
 
     <!-- Scan -->
     <section id="v-scan">
-      <h2>Scan ingredient label</h2>
+      <h2 id="scanTitle">Scan ingredient label</h2>
       <p class="sub" id="scanSub">Take a photo of the ingredient list. The AI reads it and checks your allergies.</p>
+      <div class="halalnote hidden" id="halalNote">🌙 <b>For Muslim users.</b> This looks for pork, alcohol, gelatin and other doubtful ingredients, and warns about chicken or meat because the label does not say how the animal was slaughtered. It is not a halal certificate: always look for the JAKIM halal logo.</div>
       <div class="grid2">
         <div>
           <div class="tabs" id="scanModes">
@@ -114,7 +115,7 @@
           <h3 style="margin-bottom:6px">Progress</h3>
           <ul class="steps" id="steps">
             <li id="st1"><span class="dot">1</span> <span id="st1t">Label photo selected</span></li>
-            <li id="st2"><span class="dot">2</span> Detecting allergens</li>
+            <li id="st2"><span class="dot">2</span> <span id="st2t">Detecting allergens</span></li>
             <li id="st3"><span class="dot">3</span> Results ready</li>
           </ul>
           <div id="resultBody"><p style="color:var(--muted)">Your results will show here.</p></div>
@@ -126,6 +127,7 @@
     <section id="v-history" class="hidden">
       <h2>Scan history</h2>
       <p class="sub">Your scans are saved to your account, so they are here next time too.</p>
+      <div class="filters" id="histFilters"></div>
       <div id="histList"></div>
     </section>
 

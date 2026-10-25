@@ -17,6 +17,7 @@ from supabase import create_client
 # client and SYSTEM_PROMPT are reused for the typed-ingredients mode,
 # so photo scans and text scans follow exactly the same rules.
 from detector import detect_allergens, client, SYSTEM_PROMPT, clean_result
+from halal import detect_halal, scan_text as halal_scan_text
 from notify import notify_report
 
 load_dotenv()
@@ -190,6 +191,7 @@ def scan(file: UploadFile = File(...), user=Depends(get_user)):
     row = {
         "user_id": user["id"],
         "image_path": path,
+        "scan_type": "allergy",
         "allergen_result": allergen_result,
     }
     saved = supabase.table("scans").insert(row).execute().data[0]
@@ -221,23 +223,75 @@ def scan_text(body: TextIn, user=Depends(get_user)):
         "user_id": user["id"],
         "image_path": None,
         "input_text": text,
+        "scan_type": "allergy",
         "allergen_result": allergen_result,
     }
     saved = supabase.table("scans").insert(row).execute().data[0]
     return {"id": saved["id"], "allergen_result": allergen_result}
 
 
+# ---------------------------------------------------------------- halal check
+# Same table as the allergy scans. scan_type = 'halal' tells them apart, and the halal result is kept
+# in the same allergen_result column (it is just a JSON box).
+@app.post("/halal/scan")
+def halal_scan(file: UploadFile = File(...), user=Depends(get_user)):
+    raw = file.file.read()
+    if len(raw) > 15 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image too large (max 15MB)")
+    try:
+        jpeg = prepare_image(raw)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read this image file")
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+    try:
+        tmp.write(jpeg)
+        tmp.close()
+        result = detect_halal(tmp.name)
+    except Exception:
+        logging.exception("AI call failed (halal)")
+        raise HTTPException(status_code=502, detail="The AI service had a problem. Please try again.")
+    finally:
+        os.unlink(tmp.name)
+
+    if result.get("unreadable"):
+        raise HTTPException(
+            status_code=422,
+            detail="Could not read the ingredient text clearly. Please retake the photo closer and flatter, or use Type ingredients.",
+        )
+
+    path = f"{user['id']}/{uuid.uuid4().hex}.jpg"
+    supabase.storage.from_(BUCKET).upload(path, jpeg, {"content-type": "image/jpeg"})
+    row = {"user_id": user["id"], "image_path": path, "scan_type": "halal", "allergen_result": result}
+    saved = supabase.table("scans").insert(row).execute().data[0]
+    return {"id": saved["id"], "allergen_result": result}
+
+
+@app.post("/halal/scan-text")
+def halal_scan_typed(body: TextIn, user=Depends(get_user)):
+    text = body.text.strip()
+    if len(text) < 3:
+        raise HTTPException(status_code=400, detail="Type or paste the ingredient list first")
+    if len(text) > MAX_TEXT:
+        raise HTTPException(status_code=400, detail=f"Text is too long (max {MAX_TEXT} characters)")
+    result = halal_scan_text(text)  # rules only, no AI call
+    row = {"user_id": user["id"], "image_path": None, "input_text": text,
+           "scan_type": "halal", "allergen_result": result}
+    saved = supabase.table("scans").insert(row).execute().data[0]
+    return {"id": saved["id"], "allergen_result": result}
+
+
 @app.post("/report")
 def report(body: ReportIn, background: BackgroundTasks, user=Depends(get_user)):
     if body.kind not in REPORT_KINDS:
         raise HTTPException(status_code=400, detail="Unknown report type")
-    if body.allergen and body.allergen not in BIG9:
+    if body.allergen and body.allergen not in BIG9:  # halal reports send no allergen
         raise HTTPException(status_code=400, detail="Unknown allergen")
     note = (body.note or "").strip()[:500] or None
 
     res = (
         supabase.table("scans")
-        .select("id, allergen_result, input_text")
+        .select("id, allergen_result, input_text, scan_type")
         .eq("id", body.scan_id)
         .eq("user_id", user["id"])
         .execute()
@@ -259,6 +313,11 @@ def report(body: ReportIn, background: BackgroundTasks, user=Depends(get_user)):
     ).execute()
     # Tell the developer (Telegram / email, if configured). Runs after the reply is sent.
     snapshot = scan_row.get("allergen_result") or {}
+    scan_type = scan_row.get("scan_type") or "allergy"
+    if scan_type == "halal":
+        flagged_names = [f"{i.get('tier')}: {i.get('ingredient')}" for i in (snapshot.get("flagged_items") or [])]
+    else:
+        flagged_names = [str(i.get("allergen")) for i in (snapshot.get("flagged_allergens") or [])]
     background.add_task(
         notify_report,
         {
@@ -266,7 +325,8 @@ def report(body: ReportIn, background: BackgroundTasks, user=Depends(get_user)):
             "allergen": body.allergen,
             "note": note,
             "scan_id": scan_row["id"],
-            "flagged": [str(i.get("allergen")) for i in (snapshot.get("flagged_allergens") or [])],
+            "scan_type": scan_type,
+            "flagged": flagged_names,
             "input_text": scan_row.get("input_text"),
         },
     )
@@ -279,6 +339,7 @@ def list_scans(user=Depends(get_user)):
         supabase.table("scans").select("*").eq("user_id", user["id"]).order("id", desc=True).execute().data
     )
     for r in rows:
+        r["scan_type"] = r.get("scan_type") or "allergy"  # old scans count as allergy scans
         r["image_url"] = None
         if r.get("image_path"):
             try:
