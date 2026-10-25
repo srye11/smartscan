@@ -16,7 +16,7 @@ from supabase import create_client
 
 # client and SYSTEM_PROMPT are reused for the typed-ingredients mode,
 # so photo scans and text scans follow exactly the same rules.
-from detector import detect_allergens, client, SYSTEM_PROMPT, clean_result
+from detector import ALLERGY_MODEL, detect_allergens, client, SYSTEM_PROMPT, clean_result
 from halal import detect_halal, scan_text as halal_scan_text
 from notify import notify_report
 
@@ -84,7 +84,7 @@ def prepare_image(raw: bytes) -> bytes:
 def detect_allergens_text(text, allergies):
     """Same rules and model as detect_allergens(), but the ingredients come as typed text."""
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=ALLERGY_MODEL,
         temperature=0,
         max_tokens=600,
         messages=[

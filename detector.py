@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI()
 
+# Model used for the ALLERGY scan (chosen from the model comparison: best recall on the 45 test labels).
+ALLERGY_MODEL = "gpt-4o"
+
 SYSTEM_PROMPT = """You are an allergen detection assistant. You will be shown an ingredient
 label (as an image) and a list of allergies the user has declared. Labels may be written in
 English, Bahasa Malaysia, or a mix of both within the same label — read and understand both
@@ -361,7 +364,7 @@ def detect_allergens(image_path, declared_allergies):
     base64_image = encode_image(image_path)
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=ALLERGY_MODEL,
         temperature=0,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
