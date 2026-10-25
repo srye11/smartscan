@@ -1,0 +1,46 @@
+image,smartscan_flagged,really_on_label,verdict
+label1.jpg,milk:Moderate; soy:Severe; wheat:Severe,fish:Moderate; milk:Moderate; sesame:Moderate; shellfish:Moderate; soy:Severe; wheat:Severe,MISSED: fish | MISSED: sesame | MISSED: shellfish
+label2.jpg,fish:Severe; shellfish:Moderate; soy:Severe,fish:Severe; shellfish:Moderate; soy:Severe,MATCH
+label3.jpg,fish:Moderate; milk:Moderate; peanut:Moderate; sesame:Moderate; shellfish:Moderate; wheat:Moderate,fish:Moderate; milk:Moderate; peanut:Moderate; sesame:Moderate; shellfish:Moderate; soy:Moderate; wheat:Moderate,MISSED: soy
+label4.jpg,milk:Severe; peanut:Moderate; soy:Severe; wheat:Severe,milk:Severe; peanut:Moderate; soy:Severe; tree nut:Moderate; wheat:Severe,MISSED: tree nut
+label5.jpg,egg:Moderate; milk:Moderate; soy:Moderate; tree nut:Moderate; wheat:Severe,egg:Moderate; fish:Moderate; milk:Moderate; shellfish:Moderate; soy:Moderate; tree nut:Moderate; wheat:Severe,MISSED: fish | MISSED: shellfish
+label6.jpg,milk:Severe; soy:Severe; wheat:Severe,milk:Severe; soy:Severe; wheat:Severe,MATCH
+label7.jpg,milk:Moderate; soy:Severe; wheat:Severe,soy:Severe; wheat:Severe,FALSE ALARM: milk
+label8.jpg,egg:Moderate; fish:Moderate; milk:Moderate; shellfish:Moderate; soy:Severe; wheat:Severe,egg:Moderate; fish:Moderate; milk:Moderate; peanut:Moderate; shellfish:Moderate; soy:Severe; wheat:Severe,MISSED: peanut
+label9.jpg,milk:Moderate; soy:Severe,milk:Moderate; soy:Severe,MATCH
+label10.jpg,none,none,MATCH
+label11.png,milk:Severe; wheat:Severe,milk:Severe; wheat:Severe,MATCH
+label12.jpg,none,none,MATCH
+label13.jpg,soy:Severe; wheat:Severe,soy:Severe; wheat:Severe,MATCH
+label14.png,none,fish:Severe,MISSED: fish
+label15.png,none,none,MATCH
+label16.png,soy:Severe,soy:Severe,MATCH
+label17.png,soy:Severe,soy:Severe,MATCH
+label18.jpg,milk:Severe,milk:Severe,MATCH
+label19.jpg,milk:Moderate; soy:Moderate; tree nut:Severe,milk:Moderate; soy:Moderate; tree nut:Severe; wheat:Severe,MISSED: wheat
+label20.jpg,milk:Severe; soy:Severe,milk:Severe; soy:Severe,MATCH
+label21.jpg,none,none,MATCH
+label22.jpeg,milk:Severe,milk:Severe,MATCH
+label23.png,none,none,MATCH
+label24.jpg,milk:Severe,milk:Severe,MATCH
+label25.jpg,none,none,MATCH
+label26.jpg,egg:Severe; soy:Severe,egg:Severe; soy:Severe,MATCH
+label27.jpg,fish:Severe,fish:Severe,MATCH
+label28.jpg,shellfish:Severe; soy:Moderate; wheat:Severe,shellfish:Severe; wheat:Severe,FALSE ALARM: soy
+label29.jpg,none,none,MATCH
+label30.jpg,milk:Severe,milk:Severe,MATCH
+label31.jpg,milk:Severe; soy:Severe; wheat:Severe,milk:Severe; soy:Severe; wheat:Severe,MATCH
+label32.jpg,milk:Severe; soy:Severe; wheat:Severe,milk:Severe; soy:Severe; wheat:Severe,MATCH
+label33.jpg,milk:Severe; soy:Severe; wheat:Severe,milk:Severe; soy:Severe; wheat:Severe,MATCH
+label34.jpg,milk:Severe,milk:Severe,MATCH
+label35.jpg,sesame:Moderate,sesame:Moderate,MATCH
+label36.jpg,none,none,MATCH
+label37.jpg,none,none,MATCH
+label38.jpg,none,none,MATCH
+label39.png,milk:Severe; soy:Severe; tree nut:Severe,milk:Severe; soy:Severe; tree nut:Severe,MATCH
+label40.jpg,none,none,MATCH
+label41.jpg,milk:Moderate; wheat:Severe,milk:Moderate; wheat:Severe,MATCH
+label42.jpg,egg:Severe; milk:Severe; sesame:Moderate; wheat:Severe,egg:Severe; milk:Severe; sesame:Moderate; wheat:Severe,MATCH
+label43.png,fish:Moderate; milk:Severe; soy:Severe; wheat:Severe,milk:Severe; soy:Severe; wheat:Severe,FALSE ALARM: fish
+label44.jpg,wheat:Severe,wheat:Severe,MATCH
+label45.jpg,peanut:Severe; soy:Severe,peanut:Severe; soy:Severe,MATCH

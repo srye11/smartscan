@@ -1,59 +1,36 @@
-import csv
-import time
-from halal import detect_halal
+from halal import scan_text
 
-# Edit this list. Start with these, then add label31.jpg onwards as you collect more.
-images = [
-    "label24.jpg",
-    "label31.jpg",
-    "label32.jpg",
-    "label33.jpg",
-    "label34.jpg",
-    "label35.jpg",
-    "label36.jpg",
-    "label37.jpg",
-    "label38.jpg",
-    "label39.jpeg",
-    "label40.jpg",
-    "label41.jpg",
-    "label42.jpg",
-    "label43.png",
-    "label44.jpg",
+def tiers(t):
+    r = scan_text(t)
+    return r["status"], [(i["tier"], i["ingredient"]) for i in r["flagged_items"]]
+
+cases = [
+ ("Ingredients: Sugar, gelatin (beef), citric acid, colour (E120).", "Syubhah"),
+ ("Ramuan: Tepung gandum, lemak babi, garam.", "Haram"),
+ ("Ingredients: Rice, salt, chicken flavour, sugar", "Warning"),
+ ("Ingredients: Rice, salt, sugar, palm oil", "Clear"),
+ ("Ingredients: Fish gelatin, sugar", "Clear"),
+ ("Ingredients: chickpeas, hamburger bun, ginger beer, root beer, goat milk powder", "Clear"),
+ ("Ingredients: Emulsifier (471), sugar", "Syubhah"),
+ ("Pengemulsi (E471), gula", "Syubhah"),
+ ("Contains wine vinegar, coconut oil", "Clear"),
+ ("Ingredients: pork, ham, bacon", "Haram"),
+ ("Ingredients: Vegetable glycerine, water", "Clear"),
+ ("Ingredients: glycerine, water", "Syubhah"),
+ ("Flavour (contains alcohol), sugar", "Syubhah"),
+ ("Sugar-free, fatty alcohol, sugar alcohol", "Clear"),
+ ("Daging ayam, kicap, bebas babi", "Warning"),
+ ("Ingredients: beef tallow, mono- and diglycerides of fatty acids", "Syubhah"),
+ ("Meat-free burger with vegan chicken", "Clear"),
+ ("Dark rum, sugar", "Haram"),
+ ("Ingredients: Ginger, spices, rennet", "Syubhah"),
 ]
-
-rows = []
-
-for name in images:
-    print(f"\n--- {name} ---")
-    try:
-        result = detect_halal(f"test_images/{name}")
-    except FileNotFoundError:
-        print("FILE NOT FOUND, check the name and extension")
-        continue
-
-    if result is None:
-        print("FAILED")
-        continue
-
-    logo = result["halal_logo"]
-    print("Status:", result["status"], "| Logo seen:", logo["seen"], "| Body:", logo["body_name"])
-    for f in result["flags"]:
-        print(f"  [{f['category']}] {f['ingredient']}  ->  \"{f['quoted_text']}\"")
-        print(f"      {f['reason']}")
-
-    rows.append({
-        "image": name,
-        "status": result["status"],
-        "logo_seen": logo["seen"],
-        "logo_body": logo["body_name"],
-        "flags": "; ".join(f"{f['ingredient']} ({f['category']})" for f in result["flags"]) or "none",
-        "correct_yn": "",
-    })
-    time.sleep(5)
-
-with open("halal_results.csv", "w", newline="", encoding="utf-8") as f:
-    writer = csv.DictWriter(f, fieldnames=["image", "status", "logo_seen", "logo_body", "flags", "correct_yn"])
-    writer.writeheader()
-    writer.writerows(rows)
-
-print("\nSaved to halal_results.csv")
+bad = 0
+for t, want in cases:
+    st, items = tiers(t)
+    ok = st == want
+    bad += not ok
+    print("OK " if ok else "BAD", want, "<-", st, items, "|", t[:50])
+r = scan_text("Ingredients: sugar, gelatin (beef, halal), chicken extract, chicken fat, babi")
+for i in r["flagged_items"]: print(i["tier"], i["ingredient"], "|", i["quoted_text"])
+print("failures:", bad)

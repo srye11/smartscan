@@ -1,0 +1,46 @@
+image,declared,actual,flagged,true_positives,false_positives,false_negatives,severity_correct,severity_checked
+label1.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","fish, milk, sesame, shellfish, soy, wheat","milk, soy, wheat","milk, soy, wheat",,"fish, sesame, shellfish",3,3
+label2.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","fish, shellfish, soy","fish, milk, shellfish, soy","fish, shellfish, soy",milk,,3,3
+label3.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","fish, milk, peanut, sesame, shellfish, soy, wheat","fish, milk, peanut, sesame, shellfish, soy, wheat","fish, milk, peanut, sesame, shellfish, soy, wheat",,,7,7
+label4.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, peanut, soy, tree nut, wheat","milk, peanut, soy, wheat","milk, peanut, soy, wheat",,tree nut,4,4
+label5.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","egg, fish, milk, shellfish, soy, tree nut, wheat","egg, milk, soy, tree nut, wheat","egg, milk, soy, tree nut, wheat",,"fish, shellfish",5,5
+label6.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, wheat","milk, soy, wheat","milk, soy, wheat",,,3,3
+label7.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","soy, wheat","milk, peanut, soy, wheat","soy, wheat","milk, peanut",,2,2
+label8.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","egg, fish, milk, peanut, shellfish, soy, wheat","egg, fish, milk, soy, wheat","egg, fish, milk, soy, wheat",,"peanut, shellfish",5,5
+label9.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy","milk, soy","milk, soy",,,2,2
+label10.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label11.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, wheat","milk, wheat","milk, wheat",,,2,2
+label12.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label13.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","soy, wheat","soy, wheat","soy, wheat",,,2,2
+label14.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",fish,fish,fish,,,1,1
+label15.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label16.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",soy,soy,soy,,,1,1
+label17.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",soy,"coconut, soy",soy,coconut,,1,1
+label18.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",milk,milk,milk,,,1,1
+label19.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, tree nut, wheat","milk, peanut, tree nut, wheat","milk, tree nut, wheat",peanut,soy,3,3
+label20.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy","milk, soy","milk, soy",,,2,2
+label21.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label22.jpeg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",milk,milk,milk,,,1,1
+label23.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label24.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",milk,milk,milk,,,1,1
+label25.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label26.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","egg, soy","egg, soy","egg, soy",,,2,2
+label27.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",fish,fish,fish,,,1,1
+label28.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","shellfish, wheat","fish, shellfish, wheat","shellfish, wheat",fish,,2,2
+label29.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label30.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",milk,milk,milk,,,1,1
+label31.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, wheat","milk, soy, wheat","milk, soy, wheat",,,3,3
+label32.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, wheat","milk, soy, wheat","milk, soy, wheat",,,3,3
+label33.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, wheat","milk, soy, wheat","milk, soy, wheat",,,3,3
+label34.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",milk,milk,milk,,,1,1
+label35.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",sesame,sesame,sesame,,,1,1
+label36.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label37.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label38.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, tree nut",,,,"milk, soy, tree nut",0,0
+label40.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",,,,,,0,0
+label41.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, wheat","milk, wheat","milk, wheat",,,2,2
+label42.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","egg, milk, sesame, wheat","egg, milk, sesame, wheat","egg, milk, sesame, wheat",,,4,4
+label43.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, wheat","milk, soy, wheat","milk, soy, wheat",,,3,3
+label44.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat",wheat,wheat,wheat,,,1,1
+label39.png,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","milk, soy, tree nut","milk, peanut, soy, tree nut","milk, soy, tree nut",peanut,,3,3
+label45.jpg,"egg, fish, milk, peanut, sesame, shellfish, soy, tree nut, wheat","peanut, soy","peanut, soy","peanut, soy",,,2,2

@@ -1,0 +1,10 @@
+image,declared,actual,flagged,true_positives,false_positives,false_negatives,severity_correct,severity_checked
+label1.jpg,"milk, peanut, wheat",milk,"milk, peanut, wheat",milk,"peanut, wheat",,1,1
+label2.jpg,"peanut, soy",soy,soy,soy,,,1,1
+label3.jpg,"milk, peanut, wheat",wheat,"milk, peanut, wheat",wheat,"milk, peanut",,1,1
+label4.jpg,"egg, soy",soy,"egg, soy",soy,egg,,1,1
+label5.jpg,soy,soy,soy,soy,,,1,1
+label6.jpg,fish,,,,,,0,0
+label7.jpg,shellfish,,,,,,0,0
+label8.jpg,"tree nut, soy",soy,soy,soy,,,1,1
+label9.jpg,sesame,,,,,,0,0

@@ -1,0 +1,45 @@
+image,declared_allergies,actual_allergens_present,expected_severity
+label1.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","fish,milk,sesame,shellfish,soy,wheat",fish:Moderate;milk:Moderate;sesame:Moderate;shellfish:Moderate;soy:Severe;wheat:Severe
+label2.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","fish,shellfish,soy",fish:Severe;shellfish:Moderate;soy:Severe
+label3.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","fish,milk,peanut,sesame,shellfish,soy,wheat",fish:Moderate;milk:Moderate;peanut:Moderate;sesame:Moderate;shellfish:Moderate;soy:Moderate;wheat:Moderate
+label4.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,peanut,soy,tree nut,wheat",milk:Severe;peanut:Moderate;soy:Severe;tree nut:Moderate;wheat:Severe
+label5.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","egg,fish,milk,shellfish,soy,tree nut,wheat",egg:Moderate;fish:Moderate;milk:Moderate;shellfish:Moderate;soy:Moderate;tree nut:Moderate;wheat:Severe
+label6.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,wheat",milk:Severe;soy:Severe;wheat:Severe
+label7.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","soy,wheat",soy:Severe;wheat:Severe
+label8.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","egg,fish,milk,peanut,shellfish,soy,wheat",egg:Moderate;fish:Moderate;milk:Moderate;peanut:Moderate;shellfish:Moderate;soy:Severe;wheat:Severe
+label9.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy",milk:Moderate;soy:Severe
+label10.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label11.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,wheat",milk:Severe;wheat:Severe
+label12.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label13.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","soy,wheat",soy:Severe;wheat:Severe
+label14.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",fish,fish:Severe
+label15.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label16.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",soy,soy:Severe
+label17.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",soy,soy:Severe
+label18.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",milk,milk:Severe
+label19.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,tree nut,wheat",milk:Moderate;soy:Moderate;tree nut:Severe;wheat:Severe
+label20.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy",milk:Severe;soy:Severe
+label21.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label22.jpeg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",milk,milk:Severe
+label23.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label24.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",milk,milk:Severe
+label25.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label26.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","egg,soy",egg:Severe;soy:Severe
+label27.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",fish,fish:Severe
+label28.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","shellfish,wheat",shellfish:Severe;wheat:Severe
+label29.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label30.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",milk,milk:Severe
+label31.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,wheat",milk:Severe;soy:Severe;wheat:Severe
+label32.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,wheat",milk:Severe;soy:Severe;wheat:Severe
+label33.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,wheat",milk:Severe;soy:Severe;wheat:Severe
+label34.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",milk,milk:Severe
+label35.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",sesame,sesame:Moderate
+label36.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label37.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label38.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label39.jpeg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label40.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",none,
+label41.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,wheat",milk:Moderate;wheat:Severe
+label42.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","egg,milk,sesame,wheat",egg:Severe;milk:Severe;sesame:Moderate;wheat:Severe
+label43.png,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat","milk,soy,wheat",milk:Severe;soy:Severe;wheat:Severe
+label44.jpg,"egg,fish,milk,peanut,sesame,shellfish,soy,tree nut,wheat",wheat,wheat:Severe

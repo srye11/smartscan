@@ -1,0 +1,38 @@
+6 images have at least one mistake.
+
+================================================================
+label4.jpg
+  Really on label (your answer key): milk, peanut, soy, tree nut, wheat
+  MISS         soy  (still not flagged)
+  AI flagged this time: milk, wheat, peanut, tree nut
+  GUARD DROPPED soy: "Emulsifier-Lecithin (INS322)"  -> !! REAL ALLERGEN REMOVED BY THE CHECK
+  GUARD ADDED   tree nut: "this product may contain traces of nuts & peanuts"  -> correct, it is on the label
+================================================================
+label5.jpg
+  Really on label (your answer key): egg, fish, milk, shellfish, soy, tree nut, wheat
+  MISS         shellfish  (still not flagged)
+  AI flagged this time: wheat, milk, egg, fish, tree nut, soy
+================================================================
+label8.jpg
+  Really on label (your answer key): egg, fish, milk, peanut, shellfish, soy, wheat
+  MISS         peanut  (flagged this time, the AI is not fully consistent)
+  MISS         shellfish  (still not flagged)
+  AI flagged this time: soy, wheat, milk, fish, egg, peanut
+================================================================
+label17.png
+  Really on label (your answer key): soy
+  FALSE ALARM  milk  (not flagged this time, the AI is not fully consistent)
+  AI flagged this time: soy, coconut
+================================================================
+label38.jpg
+  Really on label (your answer key): milk, soy, tree nut
+  MISS         milk  (still not flagged)
+  MISS         soy  (still not flagged)
+  MISS         tree nut  (still not flagged)
+  AI flagged this time: nothing
+================================================================
+label45.jpg
+  Really on label (your answer key): peanut, soy
+  MISS         soy  (still not flagged)
+  AI flagged this time: peanut
+================================================================
