@@ -203,3 +203,5 @@ select.input{appearance:auto;background:#fff}
 .kind{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap}
 .kind.allergy{background:var(--green-soft);color:var(--green)}
 .kind.halal{background:#f6efdc;color:#4a3300;border:1px solid #e6c97a}
+/* ---------- "No allergy" chip ---------- */
+.chip.wide{grid-column:1/-1}
