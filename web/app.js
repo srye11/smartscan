@@ -12,7 +12,7 @@
     { id: "profile", label: "Allergy profile", short: "Profile", ic: "⚙️" },
   ];
 
-  const state = { profile: null, user: null, file: null, signupAllergies: new Set(), profAllergies: new Set(), mode: "signup", recFilter: "All", kind: "allergy", histFilter: "all" };
+  const state = { profile: null, user: null, file: null, signupAllergies: new Set(), signupNone: false, profAllergies: new Set(), mode: "signup", recFilter: "All", kind: "allergy", histFilter: "all" };
 
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const show = (el, on) => el.classList.toggle("hidden", !on);
@@ -33,16 +33,32 @@
   }
 
   // ---------- allergy chips ----------
-  function drawChips(container, set) {
+  function drawChips(container, set, none) {
     container.innerHTML = "";
     BIG9.forEach((a) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chip" + (set.has(a) ? " on" : "");
       b.innerHTML = "<span>" + esc(a) + '</span><span class="tick">' + (set.has(a) ? "✓" : "") + "</span>";
-      b.onclick = () => { set.has(a) ? set.delete(a) : set.add(a); drawChips(container, set); };
+      b.onclick = () => {
+        set.has(a) ? set.delete(a) : set.add(a);
+        if (none && set.size) none.on = false;
+        drawChips(container, set, none);
+      };
       container.appendChild(b);
     });
+    if (none) {
+      const n = document.createElement("button");
+      n.type = "button";
+      n.className = "chip wide" + (none.on ? " on" : "");
+      n.innerHTML = "<span>No allergy (Halal scan only)</span>" + '<span class="tick">' + (none.on ? "✓" : "") + "</span>";
+      n.onclick = () => {
+        none.on = !none.on;
+        if (none.on) set.clear();
+        drawChips(container, set, none);
+      };
+      container.appendChild(n);
+    }
   }
 
   // ---------- auth screen ----------
@@ -73,7 +89,7 @@
       if (state.mode === "signup") {
         const name = $("fullName").value.trim();
         if (!name) throw new Error("Please enter your full name.");
-        if (state.signupAllergies.size === 0) throw new Error("Pick at least one allergy so the scanner knows what to look for.");
+        if (state.signupAllergies.size === 0 && !state.signupNone) throw new Error('Pick at least one allergy, or choose "No allergy (Halal scan only)".');
         const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
         if (error) throw error;
         if (!data.session) {
@@ -164,7 +180,7 @@
     buildNav();
     state.kind = "allergy";
     resetScan();
-    go(state.profile.allergies && state.profile.allergies.length ? "scan" : "profile");
+    go("scan");
   }
 
   async function logout() {
@@ -446,8 +462,17 @@
     }
   }
 
+  function noAllergyBlock() {
+    if (state.kind === "allergy" && !(state.profile.allergies && state.profile.allergies.length)) {
+      msg($("scanMsg"), "You have not added any allergy yet. Add one in your Allergy profile to use the Allergy scan, or use the Halal scan.", "info");
+      return true;
+    }
+    return false;
+  }
+
   $("scanBtn").onclick = async () => {
     if (!state.file) return;
+    if (noAllergyBlock()) return;
     const btn = $("scanBtn");
     btn.disabled = true;
     msg($("scanMsg"), "", "err");
@@ -494,6 +519,7 @@
   $("textBtn").onclick = async () => {
     const text = $("ingText").value.trim();
     if (text.length < 3) { msg($("scanMsg"), "Type or paste the ingredient list first.", "err"); return; }
+    if (noAllergyBlock()) return;
     const btn = $("textBtn");
     btn.disabled = true;
     msg($("scanMsg"), "", "err");
@@ -660,7 +686,8 @@
   };
 
   // ---------- start ----------
-  drawChips($("signupChips"), state.signupAllergies);
+  const signupNone = { get on() { return state.signupNone; }, set on(v) { state.signupNone = v; } };
+  drawChips($("signupChips"), state.signupAllergies, signupNone);
   setMode("signup");
   fetch(C.API_URL + "/health").catch(() => {}); // wake the free server early
 
