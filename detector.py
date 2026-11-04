@@ -360,6 +360,27 @@ def encode_image(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
+def parse_model_json(raw):
+    """Turn the model's reply into a dict. Handles ```json fences and extra words around the JSON.
+    Returns None if no valid JSON object can be found."""
+    raw = (raw or "").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`").strip()
+        if raw.lower().startswith("json"):
+            raw = raw[4:].strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        pass
+    start, end = raw.find("{"), raw.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(raw[start:end + 1])
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 def detect_allergens(image_path, declared_allergies):
     base64_image = encode_image(image_path)
 
@@ -376,13 +397,13 @@ def detect_allergens(image_path, declared_allergies):
                 ]
             }
         ],
-        max_tokens=600
+        max_tokens=900
     )
 
     raw_output = response.choices[0].message.content
 
-    try:
-        return clean_result(json.loads(raw_output), declared_allergies)
-    except json.JSONDecodeError:
-        print("Model didn't return clean JSON:", raw_output)
+    parsed = parse_model_json(raw_output)
+    if parsed is None:
+        print("Model didn't return clean JSON:", (raw_output or "")[:300])
         return None
+    return clean_result(parsed, declared_allergies)
