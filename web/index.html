@@ -16,9 +16,10 @@
   <div class="auth-side">
     <img class="auth-logo" src="logo.svg" alt="SmartScan buddy">
     <h1>SmartScan</h1>
-    <p class="tagline">Allergen-safe food, personalised for you.</p>
+    <p class="tagline">Allergen-safe and halal-aware food, personalised for you.</p>
     <div class="feature">📷 Scan any product label</div>
     <div class="feature">⚠️ Detects hidden allergens</div>
+    <div class="feature">🌙 Checks halal ingredients</div>
     <div class="feature">🕘 Remembers your scan history</div>
   </div>
   <div class="auth-main">
@@ -40,7 +41,7 @@
         <input class="input" id="password" type="password" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password">
         <div id="allergyRow">
           <label class="lbl" style="margin-top:18px">Declare your allergies</label>
-          <p class="hint">Select all that apply. You can change this later.</p>
+          <p class="hint">SmartScan has two scans: Allergy scan (uses the allergies you pick here) and Halal scan (works for everyone, no allergy needed). Select all that apply, or choose "No allergy" if you only want the Halal scan. You can change this later.</p>
           <div class="chips" id="signupChips"></div>
         </div>
         <div id="authMsg" class="msg hidden"></div>
@@ -142,7 +143,7 @@
     <!-- Profile -->
     <section id="v-profile" class="hidden">
       <h2>Allergy profile</h2>
-      <p class="sub">The scanner only checks the allergens you pick here.</p>
+      <p class="sub">The Allergy scan only checks the allergens you pick here. The Halal scan does not need any allergy.</p>
       <div class="card prof">
         <label class="lbl" for="profName" style="margin-top:0">Full name</label>
         <input class="input" id="profName">
